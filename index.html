@@ -25,7 +25,13 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 #undoBtn{background:#fff;color:#795a69}
 #finishBtn{background:#ff78aa;color:#fff}
 #finalCard{display:none;position:absolute;inset:16% 8% 12%;z-index:12;background:#fffdfbeF;border-radius:28px;box-shadow:0 12px 40px #0003;text-align:center;padding:24px}
-#finalCard .princess{font-size:86px;line-height:1.05}
+#finalCard .princessStage{position:relative;min-height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fff8fd,#fff3cf);border-radius:22px;overflow:hidden;margin-bottom:8px}
+#finalCard .princess{font-size:96px;line-height:1.05;filter:drop-shadow(0 5px 8px #0002);animation:royalPop .65s ease-out}
+#finalCard .accessories{position:absolute;left:8px;right:8px;bottom:7px;font-size:30px;letter-spacing:7px;animation:royalPop .8s .2s both}
+#finalCard .sparkles{position:absolute;inset:10px;font-size:27px;color:#e2ae2f;letter-spacing:16px;animation:twinkle .8s infinite alternate}
+#unlockText{margin-top:8px;color:#c17496!important}
+@keyframes royalPop{from{opacity:0;transform:scale(.45) translateY(25px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes twinkle{from{opacity:.35;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}
 #finalCard .big{font-size:28px;font-weight:1000;color:#7e526c;margin:8px 0}
 #finalCard .small{font-size:15px;font-weight:800;color:#8d7180}
 #finalCard button{margin-top:18px;border:0;border-radius:18px;background:#ff78aa;color:#fff;font-weight:900;font-size:16px;padding:12px 20px}
@@ -39,13 +45,13 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 <div id="guide"></div>
 <canvas id="c"></canvas><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
-<div id="finalCard"><div class="princess">👸</div><div class="big">プリンセス・クッキング！</div><div class="small">すてきに もりつけできました ✨</div><button id="againBtn">もういちど</button></div>
+<div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div><button id="againBtn">もういちど</button></div>
 </div>
 </div>
 
 <script>
 const c=document.querySelector("#c"),ctx=c.getContext("2d");
-const fill=document.querySelector("#fill"),dots=document.querySelector("#dots"),toast=document.querySelector("#toast"),guide=document.querySelector("#guide"),decorControls=document.querySelector("#decorControls"),finalCard=document.querySelector("#finalCard");
+const fill=document.querySelector("#fill"),dots=document.querySelector("#dots"),toast=document.querySelector("#toast"),guide=document.querySelector("#guide"),decorControls=document.querySelector("#decorControls"),finalCard=document.querySelector("#finalCard"),resultTitle=document.querySelector("#resultTitle"),resultText=document.querySelector("#resultText"),princessAvatar=document.querySelector("#princessAvatar"),accessories=document.querySelector("#accessories"),unlockText=document.querySelector("#unlockText"),sparkles=document.querySelector("#sparkles");
 let W=0,H=0,D=1,sound=true,audio=null,stage=0,drag=null,locked=false,stageStart=performance.now();
 let transition=null,lastFrame=performance.now(),transitionFinishQueued=false;
 const S={
@@ -56,7 +62,7 @@ const S={
  pour:{level:0,loaded:0,hasBatter:false,lastSound:0},
  cook:{level:0},
  flip:{insert:0},
- decor:{selected:null,items:[],honey:0,honeyIntro:0,honeyDone:false,done:false}
+ decor:{selected:null,items:[],honey:0,honeyIntro:0,honeyDone:false,done:false,undos:0}, score:{penalty:0,milkGood:0,milkBad:0}
 };
 
 function resize(){let r=c.getBoundingClientRect();D=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}
@@ -206,11 +212,14 @@ function flour(x,y){
  ctx.save();ctx.translate(x,y);ctx.scale(1.34,1.34);ctx.fillStyle="#e7c793";rr(-40,-55,80,110,13);ctx.fillStyle="#fff5da";rr(-25,-18,50,44,9);ctx.fillStyle="#9a7041";ctx.font="bold 17px sans-serif";ctx.textAlign="center";ctx.fillText("こな",0,10);ctx.restore()
 }
 function whisk(x,y,inserted=false){
- ctx.save();ctx.translate(x,y);ctx.scale(1.36,1.36);
+ ctx.save();ctx.translate(x,y);ctx.scale(1.30,1.30);
  ctx.fillStyle="#ee83ad";rr(-9,-70,18,74,9);
  ctx.strokeStyle="#7e939e";ctx.lineWidth=3;
- let top=inserted?0:2, bottom=inserted?82:67;
- for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*3,top);ctx.quadraticCurveTo(i*14,42,0,bottom);ctx.stroke()}
+ let bottom=inserted?56:67;
+ for(let i=-2;i<=2;i++){
+   ctx.beginPath();ctx.moveTo(i*3,2);
+   ctx.quadraticCurveTo(i*13,34,0,bottom);ctx.stroke()
+ }
  ctx.restore()
 }
 function ladle(x,y,filled=false){
@@ -241,8 +250,12 @@ function drawCream(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fil
 function drawBroccoli(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#6ba54c";rr(-6,-2,12,30,5);ctx.fillStyle="#4a913c";for(const [a,b,r] of [[-13,-10,13],[0,-16,15],[14,-9,13],[-2,-3,12]]){ctx.beginPath();ctx.arc(a,b,r,0,Math.PI*2);ctx.fill()}ctx.restore()}
 function drawFish(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#7bbbd4";ctx.beginPath();ctx.moveTo(-26,0);ctx.quadraticCurveTo(0,-22,28,0);ctx.quadraticCurveTo(0,22,-26,0);ctx.fill();ctx.beginPath();ctx.moveTo(-25,0);ctx.lineTo(-42,-18);ctx.lineTo(-42,18);ctx.closePath();ctx.fill();ctx.fillStyle="#222";ctx.beginPath();ctx.arc(17,-4,2.5,0,Math.PI*2);ctx.fill();ctx.restore()}
 function drawOnion(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#d8b4e6";ctx.beginPath();ctx.moveTo(0,-26);ctx.bezierCurveTo(22,-10,25,5,16,20);ctx.bezierCurveTo(7,34,-7,34,-16,20);ctx.bezierCurveTo(-25,5,-22,-10,0,-26);ctx.fill();ctx.strokeStyle="#8e6aa0";ctx.lineWidth=2;ctx.stroke();ctx.restore()}
-function topping(type,x,y,s=1){const fn={strawberry:drawStrawberry,banana:drawBanana,blueberry:drawBlueberry,chocolate:drawChocolate,star:drawStar,cream:drawCream,broccoli:drawBroccoli,fish:drawFish,onion:drawOnion}[type];if(fn)fn(x,y,s)}
-function syrupBottle(x,y){ctx.save();ctx.translate(x,y);ctx.rotate(.12);ctx.scale(1.2,1.2);ctx.fillStyle="#d8a061";rr(-25,-51,50,94,13);ctx.fillStyle="#875026";rr(-20,-41,40,57,9);ctx.fillStyle="#f2d4a9";rr(-10,-67,20,18,4);ctx.restore()}
+function drawButter(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#ffd85f";rr(-24,-15,48,30,6);ctx.fillStyle="#fff0a4";ctx.fillRect(-18,-11,36,7);ctx.restore()}
+function drawKiwi(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#8bcf58";ctx.beginPath();ctx.arc(0,0,22,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f4f0cf";ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.fill();ctx.fillStyle="#493a2f";for(let i=0;i<10;i++){let a=i*Math.PI/5;ctx.beginPath();ctx.arc(Math.cos(a)*14,Math.sin(a)*14,1.7,0,Math.PI*2);ctx.fill()}ctx.restore()}
+function drawRaspberry(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#df3f72";for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){ctx.beginPath();ctx.arc(i*8+(j%2)*3,j*8,7,0,Math.PI*2);ctx.fill()}ctx.fillStyle="#5ca64e";ctx.beginPath();ctx.moveTo(-10,-16);ctx.lineTo(0,-8);ctx.lineTo(10,-16);ctx.closePath();ctx.fill();ctx.restore()}
+function drawCookie(x,y,s=1){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="#d9a05f";ctx.beginPath();ctx.arc(0,0,23,0,Math.PI*2);ctx.fill();ctx.fillStyle="#6e4531";for(const [a,b] of [[-8,-7],[8,-5],[-3,9],[10,10]]){ctx.beginPath();ctx.arc(a,b,3,0,Math.PI*2);ctx.fill()}ctx.restore()}
+function topping(type,x,y,s=1){const fn={strawberry:drawStrawberry,banana:drawBanana,blueberry:drawBlueberry,chocolate:drawChocolate,star:drawStar,cream:drawCream,broccoli:drawBroccoli,fish:drawFish,onion:drawOnion,butter:drawButter,kiwi:drawKiwi,raspberry:drawRaspberry,cookie:drawCookie}[type];if(fn)fn(x,y,s)}
+function syrupBottle(x,y,angle=.12){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.scale(1.2,1.2);ctx.fillStyle="#d8a061";rr(-25,-51,50,94,13);ctx.fillStyle="#875026";rr(-20,-41,40,57,9);ctx.fillStyle="#f2d4a9";rr(-10,-67,20,18,4);ctx.restore()}
 function creamBag(x,y){ctx.save();ctx.translate(x,y);ctx.scale(1.15,1.15);ctx.fillStyle="#f5d9ea";ctx.beginPath();ctx.moveTo(-30,-50);ctx.lineTo(30,-50);ctx.lineTo(12,36);ctx.lineTo(-12,36);ctx.closePath();ctx.fill();ctx.fillStyle="#b3a5b7";ctx.beginPath();ctx.moveTo(-7,36);ctx.lineTo(7,36);ctx.lineTo(0,55);ctx.closePath();ctx.fill();ctx.restore()}
 
 function hint(){
@@ -299,8 +312,10 @@ function draw(){
   let x=drag?.kind==="whisk"?drag.x:W*.82;
   let y=drag?.kind==="whisk"?drag.y:H*.40;
   if(!drag)toolGlow(W*.82,H*.40,88);
-  // when the finger reaches the bowl, visually push the whisk head into the batter
-  if(inBowl)y=Math.max(BY()-118,Math.min(BY()-58,y));
+  if(inBowl){
+    x=Math.max(BX()-82,Math.min(BX()+82,x));
+    y=BY()-72;
+  }
   whisk(x,y,inBowl);
   if(inBowl){
     ctx.fillStyle="#f1d78f";ctx.globalAlpha=.45;
@@ -345,7 +360,7 @@ function draw(){
  }
  if(stage===7){
   if(!S.decor.honeyDone){
-    S.decor.honeyIntro=Math.min(100,S.decor.honeyIntro+0.75);
+    S.decor.honeyIntro=Math.min(100,S.decor.honeyIntro+0.55);
     S.decor.honey=S.decor.honeyIntro;
     meter(S.decor.honeyIntro);
     if(S.decor.honeyIntro>=100){S.decor.honeyDone=true;locked=false;stageStart=performance.now();meter(0)}
@@ -353,11 +368,36 @@ function draw(){
   ctx.fillStyle="#bce6fa";ctx.beginPath();ctx.ellipse(W/2,H*.71,W*.49,100,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(W/2,H*.70,W*.44,86,0,0,Math.PI*2);ctx.fill();
   for(let k=0;k<3;k++){let yy=H*.64-k*33;let grad=ctx.createRadialGradient(W*.45,yy-10,15,W/2,yy,150);grad.addColorStop(0,"#e9bd72");grad.addColorStop(1,"#c98c43");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(W/2,yy,W*.37,41,0,0,Math.PI*2);ctx.fill()}
-  if(S.decor.honey>0){let h=Math.min(1,S.decor.honey/100);ctx.fillStyle="#d99820";ctx.globalAlpha=.22+.62*h;ctx.beginPath();ctx.ellipse(W/2,H*.55,W*.29,25,0,0,Math.PI*2);ctx.fill();ctx.fillRect(W*.29,H*.56,W*.045,55*h);ctx.fillRect(W*.60,H*.56,W*.04,43*h);ctx.fillRect(W*.48,H*.565,W*.032,35*h);ctx.globalAlpha=1}
-  let types=["strawberry","banana","blueberry","chocolate","cream","broccoli","fish","onion"];
-  for(let i=0;i<types.length;i++){let col=i%4,row=Math.floor(i/4),x=W*(.14+col*.24),y=H*(.22+row*.105);ctx.fillStyle=S.decor.selected===types[i]?"#fff0a8":"#ffffffdf";ctx.beginPath();ctx.arc(x,y,32,0,Math.PI*2);ctx.fill();topping(types[i],x,y,.92)}
-  S.decor.items.forEach(o=>topping(o.type,o.x,o.y,o.s||1.0));
-  if(!S.decor.honeyDone){syrupBottle(W*.72,H*.40);ctx.strokeStyle="#d99820";ctx.lineWidth=9;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(W*.70,H*.45);ctx.quadraticCurveTo(W*.58,H*.49,W*.51,H*.54);ctx.stroke()}
+  if(S.decor.honey>0){
+    let h=Math.min(1,S.decor.honey/100);
+    ctx.fillStyle="#d99820";ctx.globalAlpha=.18+.64*h;
+    ctx.beginPath();ctx.ellipse(W/2,H*.55,W*.29,25,0,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(W*.29,H*.56,W*.04,55*h);ctx.fillRect(W*.60,H*.56,W*.035,43*h);ctx.fillRect(W*.48,H*.565,W*.03,35*h);
+    ctx.globalAlpha=1
+  }
+
+  // smaller palette, more choices
+  let types=["strawberry","banana","blueberry","chocolate","cream","butter","kiwi","raspberry","cookie","broccoli","fish","onion"];
+  let cols=6;
+  for(let i=0;i<types.length;i++){
+    let col=i%cols,row=Math.floor(i/cols),x=W*(.075+col*.17),y=H*(.205+row*.082);
+    ctx.fillStyle=S.decor.selected===types[i]?"#fff0a8":"#ffffffdf";ctx.beginPath();ctx.arc(x,y,24,0,Math.PI*2);ctx.fill();
+    topping(types[i],x,y,.68)
+  }
+  S.decor.items.forEach(o=>topping(o.type,o.x,o.y,o.s||.78));
+
+  if(!S.decor.honeyDone){
+    let p=S.decor.honeyIntro/100;
+    let bx=W*(.72-.18*Math.sin(p*Math.PI*2)), by=H*.39;
+    let angle=-.95 + .10*Math.sin(p*Math.PI*3);
+    syrupBottle(bx,by,angle);
+    // thick, slightly wavy syrup that stretches downward from the tipped spout
+    let sx=bx-38, sy=by+18, ex=W/2+Math.sin(p*8)*W*.10, ey=H*.555;
+    ctx.strokeStyle="#d99820";ctx.lineWidth=10;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(sx,sy);
+    ctx.bezierCurveTo(sx-8,sy+45,ex+16,ey-55,ex,ey);ctx.stroke();
+    ctx.fillStyle="#d99820";ctx.beginPath();ctx.arc(ex,ey+7+Math.sin(p*14)*3,7,0,Math.PI*2);ctx.fill()
+  }
  }
 
  updateGuide();
@@ -379,11 +419,11 @@ c.onpointerdown=e=>{
  else if(stage===6&&near(q,W*.82,H*.39,145))drag={kind:"spatula",x:q.x,y:q.y,inserted:false};
 
  else if(stage===7&&S.decor.honeyDone){
-   let types=["strawberry","banana","blueberry","chocolate","cream","broccoli","fish","onion"];
+   let types=["strawberry","banana","blueberry","chocolate","cream","butter","kiwi","raspberry","cookie","broccoli","fish","onion"];
    let hitType=null;
-   types.forEach((t,i)=>{let col=i%4,row=Math.floor(i/4),x=W*(.14+col*.24),y=H*(.22+row*.105);if(near(q,x,y,38))hitType=t});
+   types.forEach((t,i)=>{let col=i%6,row=Math.floor(i/6),x=W*(.075+col*.17),y=H*(.205+row*.082);if(near(q,x,y,30))hitType=t});
    if(hitType){S.decor.selected=hitType;soundTap();msg("✨")}
-   else if(S.decor.selected&&q.y>H*.43&&q.y<H*.80){let o={type:S.decor.selected,x:q.x,y:q.y,s:1.05};S.decor.items.push(o);drag={kind:"decor",o}}
+   else if(S.decor.selected&&q.y>H*.40&&q.y<H*.80){let o={type:S.decor.selected,x:q.x,y:q.y,s:.78};S.decor.items.push(o);drag={kind:"decor",o}}
  }
 };
 
@@ -412,9 +452,13 @@ c.onpointermove=e=>{
   const landsInBowl = aboveBowl && drag.sx>bx-112 && drag.sx<bx+112 && drag.sy<by-45;
   drag.pouring=aboveBowl;
   if(landsInBowl){
+    S.score.milkGood++;
     if(Math.random()<.18)soundPour();
     S.milk.level=Math.min(100,S.milk.level+.28);meter(S.milk.level);
     if(S.milk.level>=100)beginTransition("milk",1300)
+  }else if(aboveBowl&&drag.pouring){
+    S.score.milkBad++;
+    if(S.score.milkBad%28===0)S.score.penalty+=1
   }
  }
 
@@ -470,11 +514,24 @@ c.onpointerup=e=>{
 
 document.querySelector("#undoBtn").onclick=()=>{
  if(stage!==7||S.decor.done)return;
- if(S.decor.items.length){S.decor.items.pop();beep(420,.04);msg("↶")}
+ if(S.decor.items.length){S.decor.items.pop();S.decor.undos++;S.score.penalty+=2;beep(420,.04);msg("↶")}
 };
 document.querySelector("#finishBtn").onclick=()=>{
  if(stage!==7||!S.decor.honeyDone||S.decor.done)return;
- S.decor.done=true;decorControls.style.display="none";meter(100);beep(980,.10);finalCard.style.display="block";
+ S.decor.done=true;decorControls.style.display="none";meter(100);beep(980,.10);
+ let variety=new Set(S.decor.items.map(o=>o.type)).size;
+ // 100点固定にならないよう、操作ミス・やり直し・盛り付けの種類を評価に反映
+ let score=Math.max(55,Math.min(100,94-S.score.penalty-Math.max(0,4-variety)*3+Math.min(6,variety)));
+ let rank=score>=95?5:score>=88?4:score>=80?3:score>=70?2:1;
+ const gear=["👗","👗 👠","👗 👠 📿","👗 👠 📿 👑","👗 👠 📿 👑 🪄"];
+ const names=["かわいいドレス","プリンセスシューズ","きらきらネックレス","ロイヤルティアラ","まほうのステッキ"];
+ princessAvatar.textContent=rank>=4?"👸":"👧";
+ accessories.textContent=gear[rank-1];
+ sparkles.style.display=rank>=4?"block":"none";
+ resultTitle.textContent=rank===5?"ロイヤル・プリンセス！":rank>=4?"プリンセス・シェフ！":rank>=3?"すてきなプリンセス！":"プリンセスにちかづいた！";
+ resultText.textContent="♛ "+score+"てん　おりょうりできたよ！";
+ unlockText.textContent="GET！ "+names.slice(0,rank).join("・");
+ finalCard.style.display="block";
 };
 document.querySelector("#againBtn").onclick=()=>location.reload();
 
