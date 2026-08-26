@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v48</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v49</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v48</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v49</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -496,48 +496,74 @@ function whisk(x,y,inserted=false){
  ctx.restore()
 }
 function ladle(x,y,filled=false){
- ctx.save();ctx.translate(x,y);ctx.scale(1.18,1.18);
+ ctx.save();
+ ctx.translate(x,y);
+ ctx.rotate(-0.10);
+ ctx.scale(1.22,1.22);
 
- // handle: slight diagonal and metallic shading
- ctx.save();ctx.rotate(-0.08);
- let hg=ctx.createLinearGradient(-12,-90,12,-5);
- hg.addColorStop(0,"#704a35");
- hg.addColorStop(.45,"#9a6a4d");
- hg.addColorStop(1,"#5f3e2e");
- ctx.strokeStyle=hg;ctx.lineWidth=13;ctx.lineCap="round";
- ctx.beginPath();ctx.moveTo(0,-92);ctx.lineTo(0,-8);ctx.stroke();
+ // wooden/metal handle with depth
+ let hg=ctx.createLinearGradient(-10,-96,12,-6);
+ hg.addColorStop(0,"#5e3c2a");
+ hg.addColorStop(.35,"#8f6548");
+ hg.addColorStop(.7,"#a87955");
+ hg.addColorStop(1,"#58382a");
+ ctx.strokeStyle=hg;
+ ctx.lineWidth=14;
+ ctx.lineCap="round";
+ ctx.beginPath();
+ ctx.moveTo(0,-98);
+ ctx.lineTo(0,-10);
+ ctx.stroke();
 
- // neck
- ctx.strokeStyle="#7a8790";ctx.lineWidth=7;
- ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(0,8);ctx.stroke();
+ // metal neck
+ let ng=ctx.createLinearGradient(-5,-10,7,12);
+ ng.addColorStop(0,"#eef3f5");
+ ng.addColorStop(.5,"#aeb8be");
+ ng.addColorStop(1,"#7f8a90");
+ ctx.strokeStyle=ng;
+ ctx.lineWidth=7;
+ ctx.beginPath();
+ ctx.moveTo(0,-10);
+ ctx.lineTo(0,7);
+ ctx.stroke();
 
- // spoon bowl: oval with metallic rim and inner shadow
- const g=ctx.createRadialGradient(-10,9,4,0,21,42);
- g.addColorStop(0,"#f2f6f8");
- g.addColorStop(.46,"#c9d3d9");
- g.addColorStop(1,"#7f8e97");
- ctx.fillStyle=g;
- ctx.strokeStyle="#6f7c84";ctx.lineWidth=3.5;
- ctx.beginPath();ctx.ellipse(0,25,38,29,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+ // ladle cup: deeper and more spoon-like
+ let cg=ctx.createRadialGradient(-12,11,3,1,24,44);
+ cg.addColorStop(0,"#f7fafb");
+ cg.addColorStop(.48,"#c7d0d5");
+ cg.addColorStop(.82,"#98a5ac");
+ cg.addColorStop(1,"#6e7b82");
+ ctx.fillStyle=cg;
+ ctx.strokeStyle="#5f6b72";
+ ctx.lineWidth=4;
+ ctx.beginPath();
+ ctx.ellipse(0,25,40,32,0,0,Math.PI*2);
+ ctx.fill();
+ ctx.stroke();
 
- // inner cup
- const ig=ctx.createRadialGradient(-8,17,3,0,25,31);
+ // inner bowl
+ let ig=ctx.createRadialGradient(-9,18,2,0,26,31);
  if(filled){
-   ig.addColorStop(0,"#f7e5b8");
-   ig.addColorStop(1,"#d9b86f");
+   ig.addColorStop(0,"#f8e8be");
+   ig.addColorStop(.55,"#e6c985");
+   ig.addColorStop(1,"#cda85e");
  }else{
-   ig.addColorStop(0,"#eef3f5");
-   ig.addColorStop(1,"#aebbc3");
+   ig.addColorStop(0,"#eef2f4");
+   ig.addColorStop(1,"#a4afb5");
  }
  ctx.fillStyle=ig;
- ctx.beginPath();ctx.ellipse(0,25,29,16,0,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();
+ ctx.ellipse(0,25,30,17,0,0,Math.PI*2);
+ ctx.fill();
 
- // rim highlight
- ctx.strokeStyle="#ffffffaa";ctx.lineWidth=2;
- ctx.beginPath();ctx.ellipse(-5,19,22,8,0,Math.PI*1.1,Math.PI*1.9);ctx.stroke();
+ // shiny rim highlight
+ ctx.strokeStyle="#ffffffcc";
+ ctx.lineWidth=2.4;
+ ctx.beginPath();
+ ctx.ellipse(-4,18,23,9,0,Math.PI*1.06,Math.PI*1.92);
+ ctx.stroke();
+
  ctx.restore();
-
- ctx.restore()
 }
 function spatula(x,y,r=0){
  ctx.save();ctx.translate(x,y);ctx.rotate(r);ctx.scale(1.3,1.3);ctx.fillStyle="#b9c5cc";rr(-33,8,66,44,10);ctx.strokeStyle="#7d909a";ctx.lineWidth=3;ctx.strokeRect(-30,12,60,36);ctx.fillStyle="#995e45";rr(-9,-82,18,93,8);ctx.restore()
@@ -620,9 +646,17 @@ function drawTransition(){
    bowlAt(bowlX,bowlY,.82);
    let q=ease01(t);
    let lx=W*.79+(bowlX-W*.79)*q;
-   let ly=H*.40+(bowlY-52-H*.40)*q;
+   let ly=H*.40+(bowlY-38-H*.40)*q;
    ladle(lx,ly,q>.44);
-   if(q>.48)batterSurfaceOverlay(bowlX,bowlY,.82,"#e3b866");
+
+   if(q>.42){
+     ctx.save();
+     ctx.fillStyle="#e3b866";ctx.globalAlpha=.98;
+     ctx.beginPath();ctx.ellipse(bowlX,bowlY-35*.82,126*.82,29*.82,0,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.rect(0,0,W,bowlY-35*.82+5);ctx.clip();
+     ladle(lx,ly,true);
+     ctx.restore();
+   }
    if(q>.58&&Math.random()<.12)soundScoop()
  }
  if(transition.type==="egg"){
@@ -740,7 +774,7 @@ function drawTransition(){
      // continue from the exact scooped position, then lift out
      const q=ease01(t/.20);
      lx=bowlX;
-     ly=(bowlY-52)+(bowlY-145-(bowlY-52))*q;
+     ly=(bowlY-38)+(bowlY-145-(bowlY-38))*q;
      ladle(lx,ly,true);
    }else if(t<.68){
      // carry it clearly ABOVE the pan
@@ -833,14 +867,37 @@ function draw(){
  if(stage===4){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
   bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
+
   ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;
   if(S.tapSeq.step>0){
-    // spoon cup goes into the batter, not in front of the bowl
-    ladle(bowlX,bowlY-52,true);
-    ctx.restore();
-    batterSurfaceOverlay(bowlX,bowlY,.82,"#e3b866");
+    // cup is pushed visibly into the batter
+    ladle(bowlX,bowlY-38,true);
   }else{
     ladle(W*.79,H*.40,false);
+  }
+  ctx.restore();
+
+  if(S.tapSeq.step>0){
+    // liquid surface passes in FRONT of the lower part of the ladle cup
+    ctx.save();
+    ctx.fillStyle="#e3b866";
+    ctx.globalAlpha=.98;
+    ctx.beginPath();
+    ctx.ellipse(bowlX,bowlY-35*.82,126*.82,29*.82,0,0,Math.PI*2);
+    ctx.fill();
+
+    // redraw only the upper visible part of the ladle above the surface
+    ctx.beginPath();
+    ctx.rect(0,0,W,bowlY-35*.82+5);
+    ctx.clip();
+    ladle(bowlX,bowlY-38,true);
+    ctx.restore();
+
+    // batter swirl remains visible
+    ctx.save();
+    ctx.strokeStyle="#fff0bd";ctx.lineWidth=3;ctx.globalAlpha=.5;
+    ctx.beginPath();
+    ctx.ellipse(bowlX,bowlY-35*.82,76,13,0,0,Math.PI*2);ctx.stroke();
     ctx.restore();
   }
  }
