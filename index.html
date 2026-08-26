@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v38</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v39</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v38</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v39</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -190,11 +190,11 @@ function updateGuide(){
 
 function beginTransition(type,duration=1200,advance=true){
  if(locked||transition)return;
- locked=true;drag=null;meter(advance?100:Math.min(90,(S.tapSeq.step+1)*30));
+ locked=true;drag=null;
+ meter(advance?95:Math.min(90,(S.tapSeq.step+1)*30));
  transitionFinishQueued=false;
  transition={type,start:performance.now(),duration,advance};
- if(advance){soundComplete();msg("できた！ ✨")}
- else {soundTap();msg("つぎもタップ！ ✨")}
+ if(!advance){soundTap();msg("つぎもタップ！ ✨")}
 }
 function finishTransition(){
  if(!transition)return;
@@ -219,6 +219,7 @@ function finishTransition(){
  if(finishedType==="egg"){S.egg.opened=true;S.egg.settled=true;}
  stage=Math.min(7,stage+1);
  S.tapSeq.step=0;
+ soundComplete();msg("できた！ ✨");
  locked=false;stageStart=performance.now();meter(0);setDots();updateGuide();
  if(stage===7){S.decor.honeyIntro=0;S.decor.honey=0;S.decor.honeyDone=false;locked=true;}
 }
@@ -504,6 +505,7 @@ function creamBag(x,y){ctx.save();ctx.translate(x,y);ctx.scale(1.15,1.15);ctx.fi
 
 function hint(){}
 
+function ease01(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)}
 function drawTransition(){
  if(!transition)return false;
  let t=Math.min(1,(performance.now()-transition.start)/transition.duration),
@@ -543,48 +545,62 @@ function drawTransition(){
  }
  if(transition.type==="egg"){
    bowl();
-   const sx=W*.80, sy=H*.39;
-   const tx=BX(), ty=BY()-145;
-   // phase 1: whole egg travels to bowl and stays there
-   if(t<.38){
-     const p=ease(Math.min(1,t/.38));
-     egg(sx+(tx-sx)*p,sy+(ty-sy)*p);
-   }else{
-     const p=(t-.38)/.62;
-     // brief crack while held over bowl
-     if(p<.18){
-       egg(tx,ty);
-       ctx.save();ctx.strokeStyle="#765743";ctx.lineWidth=3;
-       ctx.beginPath();ctx.moveTo(tx-4,ty-18);ctx.lineTo(tx+6,ty-7);ctx.lineTo(tx-4,ty+3);ctx.lineTo(tx+5,ty+13);ctx.stroke();
-       ctx.restore();
-       if(p>.07&&p<.11)soundCrack();
-     }else{
-       const open=Math.min(1,(p-.18)/.28);
-       // two shell halves separate sideways and rotate naturally
-       ctx.save();
-       ctx.translate(tx-10-open*44,ty);
-       ctx.rotate(-open*.65);
-       ctx.fillStyle="#fff1cf";ctx.strokeStyle="#cdbb91";ctx.lineWidth=4;
-       ctx.beginPath();ctx.ellipse(0,0,28,39,0,Math.PI*.08,Math.PI*1.02);ctx.closePath();ctx.fill();ctx.stroke();
-       ctx.restore();
-       ctx.save();
-       ctx.translate(tx+10+open*44,ty);
-       ctx.rotate(open*.65);
-       ctx.fillStyle="#fff1cf";ctx.strokeStyle="#cdbb91";ctx.lineWidth=4;
-       ctx.beginPath();ctx.ellipse(0,0,28,39,0,-Math.PI*.02,Math.PI*.92,true);ctx.closePath();ctx.fill();ctx.stroke();
-       ctx.restore();
+   const sx=W*.80,sy=H*.39,tx=BX(),ty=BY()-135;
 
-       // white + yolk drop vertically from between shell halves into bowl
-       const drop=Math.max(0,Math.min(1,(p-.30)/.52));
-       const yy=ty+30+(BY()-ty-42)*ease(drop);
-       ctx.save();
-       ctx.globalAlpha=.68;
-       ctx.fillStyle="#fffdf2";
-       ctx.beginPath();ctx.ellipse(tx,yy-5,27,38,0,0,Math.PI*2);ctx.fill();
-       ctx.globalAlpha=1;
-       ctx.fillStyle="#ffc62f";ctx.beginPath();ctx.arc(tx,yy,17,0,Math.PI*2);ctx.fill();
-       ctx.restore();
-     }
+   if(t<.34){
+     const p=ease01(t/.34);
+     egg(sx+(tx-sx)*p,sy+(ty-sy)*p);
+   }else if(t<.48){
+     egg(tx,ty);
+     ctx.save();
+     ctx.strokeStyle="#6f5542";ctx.lineWidth=3;
+     ctx.beginPath();
+     ctx.moveTo(tx-4,ty-23);ctx.lineTo(tx+6,ty-12);ctx.lineTo(tx-4,ty-2);
+     ctx.lineTo(tx+6,ty+9);ctx.lineTo(tx-3,ty+20);
+     ctx.stroke();
+     ctx.restore();
+   }else{
+     const p=ease01((t-.48)/.30);
+     const fade=1-ease01((t-.78)/.22);
+
+     // shell halves — crescent-like clipped halves, not two whole eggs
+     ctx.save();
+     ctx.globalAlpha=Math.max(0,fade);
+     ctx.fillStyle="#fff0cb";ctx.strokeStyle="#c5ad83";ctx.lineWidth=3;
+
+     ctx.save();
+     ctx.translate(tx-8-p*42,ty);
+     ctx.rotate(-p*.58);
+     ctx.beginPath();
+     ctx.moveTo(0,-34);
+     ctx.bezierCurveTo(-29,-22,-31,22,0,34);
+     ctx.lineTo(0,15);
+     ctx.lineTo(-8,8);ctx.lineTo(0,0);ctx.lineTo(-7,-8);ctx.lineTo(0,-15);
+     ctx.closePath();ctx.fill();ctx.stroke();
+     ctx.restore();
+
+     ctx.save();
+     ctx.translate(tx+8+p*42,ty);
+     ctx.rotate(p*.58);
+     ctx.beginPath();
+     ctx.moveTo(0,-34);
+     ctx.bezierCurveTo(29,-22,31,22,0,34);
+     ctx.lineTo(0,15);
+     ctx.lineTo(8,8);ctx.lineTo(0,0);ctx.lineTo(7,-8);ctx.lineTo(0,-15);
+     ctx.closePath();ctx.fill();ctx.stroke();
+     ctx.restore();
+     ctx.restore();
+
+     // contents drop into bowl
+     const d=ease01((t-.55)/.38);
+     const yy=ty+28+(BY()-ty-58)*d;
+     ctx.save();
+     ctx.globalAlpha=.72;
+     ctx.fillStyle="#fffdf0";
+     ctx.beginPath();ctx.ellipse(tx,yy,25,35,0,0,Math.PI*2);ctx.fill();
+     ctx.globalAlpha=1;
+     ctx.fillStyle="#ffc52f";ctx.beginPath();ctx.arc(tx,yy+2,17,0,Math.PI*2);ctx.fill();
+     ctx.restore();
    }
  }
 
