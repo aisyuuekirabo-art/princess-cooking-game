@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Complete v25</title>
+<title>Princess Cooking Studio - Pancake Princess Complete v26</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -108,6 +108,33 @@ function soundSizzle(){noiseBurst(.09,.012,2200)}
 function soundPlop(){noiseBurst(.045,.020,500);beep(125,.085,.022,"sine")}
 function soundFlame(){noiseBurst(.045,.005,300)}
 function soundCrack(){noiseBurst(.055,.026,1400);beep(185,.045,.018,"square")}
+
+let bgmTimer=null,bgmStep=0;
+const BGM_NOTES=[523.25,659.25,783.99,659.25,587.33,698.46,880.00,698.46];
+function bgmTick(){
+ if(!sound)return;
+ try{
+   const ac=ensureAudio();
+   const f=BGM_NOTES[bgmStep%BGM_NOTES.length];
+   const o=ac.createOscillator(),g=ac.createGain();
+   o.type="sine";o.frequency.value=f;
+   o.connect(g);g.connect(ac.destination);
+   const now=ac.currentTime;
+   g.gain.setValueAtTime(.0001,now);
+   g.gain.exponentialRampToValueAtTime(.016,now+.02);
+   g.gain.exponentialRampToValueAtTime(.0001,now+.28);
+   o.start(now);o.stop(now+.30);
+   bgmStep++;
+ }catch(e){}
+}
+function startBGM(){
+ if(bgmTimer||!sound)return;
+ bgmTick();
+ bgmTimer=setInterval(bgmTick,520);
+}
+function stopBGM(){
+ if(bgmTimer){clearInterval(bgmTimer);bgmTimer=null}
+}
 function soundComplete(){
  if(!sound)return;
  beep(660,.10,.020,"triangle");
@@ -347,7 +374,7 @@ function drawTransition(){
  if(transition.type==="mix"){bowl();ctx.fillStyle="#efd38c";ctx.beginPath();ctx.ellipse(bx,by-10,112,27,0,0,Math.PI*2);ctx.fill()}
  if(transition.type==="pour"){pan();pancake(H*.67,.05,1+e*.04)}
  if(transition.type==="cook"){stovePan(W*.48,H*.70,true);pancakeAt(W*.48,H*.69,.86,1)}
- if(transition.type==="flip"){stovePan(W*.48,H*.70,true);let lift=Math.sin(t*Math.PI)*175,rot=t*Math.PI*2.8;ctx.save();ctx.translate(W*.48,H*.69-lift);ctx.rotate(rot);ctx.scale(1+.08*Math.sin(t*Math.PI),1+.08*Math.sin(t*Math.PI));let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);grad.addColorStop(0,"#e4b666");grad.addColorStop(1,"#b66f32");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();ctx.restore();spatula(W*.48+80*(1-e),H*.69+35*(1-e),Math.PI-.2)}
+ if(transition.type==="flip"){stovePan(W*.48,H*.70,true);let lift=Math.sin(t*Math.PI)*175,rot=t*Math.PI*2.8;spatula(W*.48+55*(1-e),H*.69+40*(1-e),Math.PI-.15);ctx.save();ctx.translate(W*.48,H*.69-lift);ctx.rotate(rot);ctx.scale(1+.08*Math.sin(t*Math.PI),1+.08*Math.sin(t*Math.PI));let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);grad.addColorStop(0,"#e4b666");grad.addColorStop(1,"#b66f32");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();ctx.restore()}
  if(t>=1&&!transitionFinishQueued){transitionFinishQueued=true;setTimeout(finishTransition,60)}
  return true
 }
@@ -424,17 +451,17 @@ function draw(){
 
   if(drag?.kind==="flipGesture"){
     const lift=Math.max(0,Math.min(100,(drag.startY-drag.fingerY)));
-    pancakeAt(panX,panY-10-lift*.28,.86,1);
-    // spatula appears already inserted under the pancake, then follows the upward swipe
-    spatula(panX+12,panY+24-lift*.25,Math.PI-0.42+lift*.008);
+    // Draw the flipper FIRST so the blade is visually underneath the pancake.
+    spatula(panX+12,panY+36-lift*.20,Math.PI-0.22+lift*.006);
+    pancakeAt(panX,panY-10-lift*.30,.86,1);
   }else{
-    pancakeAt(panX,panY-10,.86,1);
-    // subtle inserted-tool hint, not something the child has to grab
     if(!drag){
-      ctx.globalAlpha=.55+.18*Math.sin(performance.now()/180);
-      spatula(panX+110,panY+25,Math.PI-0.38);
+      ctx.globalAlpha=.58+.16*Math.sin(performance.now()/180);
+      // blade peeks out from under the right side of the pancake
+      spatula(panX+92,panY+38,Math.PI-0.18);
       ctx.globalAlpha=1
     }
+    pancakeAt(panX,panY-10,.86,1);
   }
 
   ctx.fillStyle="#fff8";rr(W*.37,H*.51,W*.22,36,18);
@@ -448,9 +475,12 @@ function draw(){
     meter(S.decor.honeyIntro);
     if(S.decor.honeyIntro>=100){S.decor.honeyDone=true;locked=false;stageStart=performance.now();meter(0)}
   }
-  ctx.fillStyle="#bce6fa";ctx.beginPath();ctx.ellipse(W/2,H*.71,W*.49,100,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(W/2,H*.70,W*.44,86,0,0,Math.PI*2);ctx.fill();
-  for(let k=0;k<3;k++){let yy=H*.64-k*33;let grad=ctx.createRadialGradient(W*.45,yy-10,15,W/2,yy,150);grad.addColorStop(0,"#e9bd72");grad.addColorStop(1,"#c98c43");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(W/2,yy,W*.37,41,0,0,Math.PI*2);ctx.fill()}
+  const finalMode=S.decor.done;
+  const plateCY=finalMode?H*.73:H*.71;
+  const cakeBase=finalMode?H*.665:H*.64;
+  ctx.fillStyle="#bce6fa";ctx.beginPath();ctx.ellipse(W/2,plateCY,W*.49,100,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(W/2,plateCY-8,W*.44,86,0,0,Math.PI*2);ctx.fill();
+  for(let k=0;k<3;k++){let yy=cakeBase-k*33;let grad=ctx.createRadialGradient(W*.45,yy-10,15,W/2,yy,150);grad.addColorStop(0,"#e9bd72");grad.addColorStop(1,"#c98c43");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(W/2,yy,W*.37,41,0,0,Math.PI*2);ctx.fill()}
   if(S.decor.honey>0){
     let h=Math.min(1,S.decor.honey/100);
     ctx.fillStyle="#d99820";ctx.globalAlpha=.18+.64*h;
@@ -467,11 +497,11 @@ function draw(){
     ctx.fillStyle=S.decor.selected===types[i]?"#fff0a8":"#ffffffdf";ctx.beginPath();ctx.arc(x,y,24,0,Math.PI*2);ctx.fill();
     topping(types[i],x,y,.68)
   }
-  S.decor.items.forEach(o=>topping(o.type,o.x,o.y,o.s||.78));
+  S.decor.items.forEach(o=>topping(o.type,o.x,o.y+(S.decor.done?H*.025:0),o.s||.78));
   drawSparkles();
   if(S.decor.done){
     // appetizing finish: toasted edge, butter, glossy syrup and warm highlights
-    const topY=H*.61-2*36;
+    const topY=H*.665-2*33;
     // butter pat
     ctx.save();ctx.translate(W*.47,topY-10);ctx.rotate(-.08);
     ctx.fillStyle="#ffe57a";ctx.shadowColor="#c98d2b66";ctx.shadowBlur=8;ctx.fillRect(-23,-9,46,18);
@@ -484,7 +514,7 @@ function draw(){
     ctx.globalAlpha=1;
     // warm plate glow
     ctx.strokeStyle="#ffd95e";ctx.lineWidth=5;ctx.globalAlpha=.38+.15*Math.sin(performance.now()/220);
-    ctx.beginPath();ctx.ellipse(W/2,H*.70,W*.45,90,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1
+    ctx.beginPath();ctx.ellipse(W/2,plateCY-8,W*.45,90,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1
   }
 
   if(!S.decor.honeyDone){
@@ -514,7 +544,7 @@ function pt(e){let r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.cli
 function near(q,x,y,r){return Math.hypot(q.x-x,q.y-y)<r}
 
 c.onpointerdown=e=>{
- if(sound){try{ensureAudio()}catch(err){}}
+ if(sound){try{ensureAudio();startBGM()}catch(err){}}
  if(locked||transition)return;let q=pt(e);c.setPointerCapture(e.pointerId);stageStart=performance.now();
 
  if(stage===0&&near(q,W*.80,H*.35,130))drag={kind:"egg",x:q.x,y:q.y-34,ox:0,oy:-34};
@@ -653,10 +683,11 @@ document.querySelector("#finishBtn").onclick=()=>{
 };
 document.querySelector("#againBtn").onclick=()=>location.reload();
 
-document.addEventListener("pointerdown",()=>{if(sound){try{ensureAudio()}catch(e){}}},{once:true});
+document.addEventListener("pointerdown",()=>{if(sound){try{ensureAudio();startBGM()}catch(e){}}},{once:true});
 document.querySelector("#snd").onclick=e=>{
  sound=!sound;e.currentTarget.textContent=sound?"♪":"×";
- if(sound){try{ensureAudio()}catch(err){};beep(700,.08,.025,"triangle")}
+ if(sound){try{ensureAudio();startBGM()}catch(err){};beep(700,.08,.025,"triangle")}
+ else stopBGM();
 };
 document.querySelector("#home").onclick=()=>location.reload();
 setDots();updateGuide();requestAnimationFrame(draw);
