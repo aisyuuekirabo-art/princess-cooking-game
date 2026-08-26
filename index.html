@@ -61,7 +61,14 @@ const S={
 
 function resize(){let r=c.getBoundingClientRect();D=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}
 addEventListener("resize",resize);resize();
-function beep(f=500,d=.05,v=.015){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();audio.resume();let o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;o.connect(g);g.connect(audio.destination);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.start();o.stop(audio.currentTime+d)}catch(e){}}
+function beep(f=500,d=.05,v=.015,type="sine"){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();audio.resume();let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(audio.destination);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.start();o.stop(audio.currentTime+d)}catch(e){}}
+function soundTap(){beep(540,.035,.012,"triangle")}
+function soundPour(){beep(190,.045,.010,"sine")}
+function soundMix(){beep(118,.035,.010,"triangle")}
+function soundScoop(){beep(235,.05,.012,"sine")}
+function soundSizzle(){beep(92,.035,.006,"sawtooth")}
+function soundPlop(){beep(165,.07,.018,"sine")}
+function soundFlame(){beep(72,.035,.004,"sine")}
 function msg(s){toast.textContent=s;toast.classList.add("on");setTimeout(()=>toast.classList.remove("on"),520)}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
 function meter(v){fill.style.width=Math.max(0,Math.min(100,v))+"%"}
@@ -72,8 +79,8 @@ const guideText=[
  "おうちの人へ：卵をつかんで、ボウルのふちの丸へ3回コンコン。",
  "おうちの人へ：牛乳パックを持ってボウルの上へ。注ぎ口から真下に牛乳が落ちます。",
  "おうちの人へ：粉の袋をボウルの上へ持っていき、入れてあげよう。",
- "おうちの人へ：泡立て器をボウルに入れて、指でぐるぐる混ぜよう。",
- "おうちの人へ：おたまをボウルに入れて生地をすくい、そのままフライパンへ運んで流そう。",
+ "おうちの人へ：右の泡立て器をつかみ、先をボウルの生地に入れてから、指でぐるぐる混ぜよう。",
+ "おうちの人へ：おたまを左のボウルにしっかり入れて生地をすくい、火のついたコンロのフライパンへ運んで流そう。",
  "おうちの人へ：焼ける色と気泡の変化を見ながら少し待とう。",
  "おうちの人へ：フライ返しをパンケーキの下へ入れて、上へ持ち上げよう。",
  "おうちの人へ：材料を選んでパンケーキをタップ。間違えたら『1こもどす』。終わったら『できあがり』。"
@@ -142,6 +149,36 @@ function bowl(){
  if(stage===2&&S.flour.level>5){ctx.fillStyle="#f8e8c8";ctx.beginPath();ctx.ellipse(x+24,y-17,54,17,0,0,Math.PI*2);ctx.fill()}
  if(stage===3&&S.mix.level>5){ctx.strokeStyle="#fff2b7";ctx.lineWidth=6;ctx.beginPath();ctx.ellipse(x,y-8,78,16,0,0,Math.PI*2);ctx.stroke()}
 }
+function bowlAt(x,y,scale=1){
+ ctx.save();ctx.translate(x-BX(),y-BY());ctx.scale(scale,scale);bowl();ctx.restore()
+}
+function stovePan(cx,cy,flame=true){
+ // compact cooktop under the pan
+ ctx.save();
+ ctx.fillStyle="#f1e7e4";rr(cx-148,cy+32,296,72,20);
+ ctx.fillStyle="#33383e";ctx.beginPath();ctx.ellipse(cx,cy+43,112,24,0,0,Math.PI*2);ctx.fill();
+ if(flame){
+   for(let i=-2;i<=2;i++){
+     let fx=cx+i*30,fy=cy+58;
+     ctx.fillStyle=i%2?"#ff9d2e":"#4aa7ff";
+     ctx.beginPath();ctx.moveTo(fx,fy+18);ctx.quadraticCurveTo(fx-14,fy,fx,fy-20);ctx.quadraticCurveTo(fx+14,fy,fx,fy+18);ctx.fill()
+   }
+ }
+ ctx.fillStyle="#292c31";ctx.beginPath();ctx.ellipse(cx,cy,138,50,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#292c31";rr(cx+105,cy-11,165,22,11);
+ ctx.restore()
+}
+function pancakeAt(cx,cy,b=.3,scale=1){
+ ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);
+ let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);
+ grad.addColorStop(0,`rgb(${246-b*38},${218-b*32},${151-b*20})`);
+ grad.addColorStop(1,`rgb(${221-b*45},${171-b*38},${93-b*18})`);
+ ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#c88943";ctx.globalAlpha=.12+b*.35;
+ for(let i=0;i<8;i++){ctx.beginPath();ctx.arc(-70+i*20,-5+(i%2)*12,4+(i%3),0,Math.PI*2);ctx.fill()}
+ ctx.globalAlpha=1;ctx.restore()
+}
+
 function pulse(x,y,r=27){ctx.strokeStyle="#ff5f9c";ctx.lineWidth=6;ctx.globalAlpha=.65+.2*Math.sin(performance.now()/160);ctx.beginPath();ctx.arc(x,y,r+3*Math.sin(performance.now()/180),0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1}
 function toolGlow(x,y,r=82){ctx.fillStyle="#ffffffbe";ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#ff9bc0";ctx.lineWidth=4;ctx.globalAlpha=.45+.2*Math.sin(performance.now()/180);ctx.stroke();ctx.globalAlpha=1}
 function arrow(x1,y1,x2,y2){ctx.save();ctx.strokeStyle="#ff6fa8";ctx.lineWidth=7;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();let a=Math.atan2(y2-y1,x2-x1);ctx.fillStyle="#ff6fa8";ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-18*Math.cos(a-.5),y2-18*Math.sin(a-.5));ctx.lineTo(x2-18*Math.cos(a+.5),y2-18*Math.sin(a+.5));ctx.closePath();ctx.fill();ctx.restore()}
@@ -213,8 +250,12 @@ function hint(){
  if(stage===0){pulse(BX()+105,BY()-22,25);arrow(W*.79,H*.31,BX()+120,BY()-55)}
  if(stage===1){arrow(W*.80,H*.25,BX()+75,BY()-105)}
  if(stage===2){arrow(W*.79,H*.27,BX()+120,BY()-130)}
- if(stage===3){ctx.strokeStyle="#ff79aa";ctx.lineWidth=6;ctx.setLineDash([10,8]);ctx.beginPath();ctx.arc(BX(),BY()-10,80,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
- if(stage===4){arrow(W*.79,H*.27,W*.50,H*.58)}
+ if(stage===3){
+ ctx.strokeStyle="#ff79aa";ctx.lineWidth=6;ctx.setLineDash([10,8]);
+ ctx.beginPath();ctx.arc(BX(),BY()-15,85,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+ arrow(W*.82,H*.40,BX()+65,BY()-80)
+}
+ if(stage===4){arrow(W*.82,H*.37,W*.29,H*.53)}
  if(stage===6){arrow(W*.79,H*.32,W*.48,H*.62)}
 }
 function drawTransition(){
@@ -226,8 +267,8 @@ function drawTransition(){
  if(transition.type==="flour"){bowl();ctx.fillStyle="#fff3d9";ctx.globalAlpha=1-e;for(let i=0;i<24;i++){ctx.beginPath();ctx.arc(bx-80+Math.random()*160,by-30+Math.random()*70,3,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
  if(transition.type==="mix"){bowl();ctx.fillStyle="#efd38c";ctx.beginPath();ctx.ellipse(bx,by-10,112,27,0,0,Math.PI*2);ctx.fill()}
  if(transition.type==="pour"){pan();pancake(H*.67,.05,1+e*.04)}
- if(transition.type==="cook"){pan();pancake(H*.67,.86)}
- if(transition.type==="flip"){pan();let lift=Math.sin(t*Math.PI)*145,rot=t*Math.PI*2;ctx.save();ctx.translate(W*.42,H*.67-lift);ctx.rotate(rot);let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);grad.addColorStop(0,"#e4b666");grad.addColorStop(1,"#b66f32");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();ctx.restore();spatula(W*.42+80*(1-e),H*.66+35*(1-e),-.2)}
+ if(transition.type==="cook"){stovePan(W*.48,H*.70,true);pancakeAt(W*.48,H*.69,.86,1)}
+ if(transition.type==="flip"){stovePan(W*.48,H*.70,true);let lift=Math.sin(t*Math.PI)*145,rot=t*Math.PI*2;ctx.save();ctx.translate(W*.48,H*.69-lift);ctx.rotate(rot);let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);grad.addColorStop(0,"#e4b666");grad.addColorStop(1,"#b66f32");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();ctx.restore();spatula(W*.48+80*(1-e),H*.69+35*(1-e),-.2)}
  if(t>=1&&!transitionFinishQueued){transitionFinishQueued=true;setTimeout(finishTransition,60)}
  return true
 }
@@ -254,26 +295,53 @@ function draw(){
  }
  if(stage===3){
   bowl();
-  let inserted=drag?.kind==="whisk"&&Math.abs(drag.x-BX())<125&&drag.y>BY()-125&&drag.y<BY()+20;
-  let x=drag?.kind==="whisk"?drag.x:W*.81,y=drag?.kind==="whisk"?drag.y:H*.31;
-  if(!drag)toolGlow(W*.81,H*.31,88);
-  whisk(x,inserted)
+  const inBowl=drag?.kind==="whisk"&&Math.abs(drag.x-BX())<125&&drag.y>BY()-150&&drag.y<BY()+10;
+  let x=drag?.kind==="whisk"?drag.x:W*.82;
+  let y=drag?.kind==="whisk"?drag.y:H*.40;
+  if(!drag)toolGlow(W*.82,H*.40,88);
+  // when the finger reaches the bowl, visually push the whisk head into the batter
+  if(inBowl)y=Math.max(BY()-118,Math.min(BY()-58,y));
+  whisk(x,y,inBowl);
+  if(inBowl){
+    ctx.fillStyle="#f1d78f";ctx.globalAlpha=.45;
+    ctx.beginPath();ctx.ellipse(BX(),BY()-8,100,22,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1
+  }
  }
  if(stage===4){
-  bowl();
-  ctx.save();ctx.translate(-W*.08,H*.13);pan();ctx.restore();
-  let x=drag?.kind==="ladle"?drag.x:W*.81,y=drag?.kind==="ladle"?drag.y:H*.30;
-  if(!drag)toolGlow(W*.81,H*.30,94);
-  ladle(x,y,S.pour.hasBatter);
-  if(S.pour.level>0){ctx.save();ctx.translate(-W*.08,H*.13);pancake(H*.67,.04,Math.max(.45,S.pour.level/100));ctx.restore()}
+  const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
+  bowlAt(bowlX,bowlY,.82);
+  stovePan(panX,panY,true);
+  let x=drag?.kind==="ladle"?drag.x:W*.82,y=drag?.kind==="ladle"?drag.y:H*.38;
+  if(!drag)toolGlow(W*.82,H*.38,92);
+  let overPan=drag?.kind==="ladle"&&near({x:drag.x,y:drag.y},panX,panY-45,165);
+  if(overPan&&S.pour.hasBatter){
+    ctx.save();ctx.translate(x,y);ctx.rotate(-.72);ctx.translate(-x,-y);ladle(x,y,true);ctx.restore();
+    // visible batter stream from ladle to the pan
+    ctx.strokeStyle="#edcf87";ctx.lineWidth=16;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(x-18,y+42);ctx.lineTo(x-18,panY-8);ctx.stroke()
+  }else{
+    ladle(x,y,S.pour.hasBatter)
+  }
+  if(S.pour.level>0)pancakeAt(panX,panY-10,.04,Math.max(.35,S.pour.level/100));
  }
  if(stage===5){
-  pan();if(Math.random()<.08)soundSizzle();S.cook.level=Math.min(100,S.cook.level+dt*.0043);meter(S.cook.level);pancake(H*.67,S.cook.level/115);
-  for(let i=0;i<Math.floor(S.cook.level/8);i++){ctx.fillStyle="#fff0ad";ctx.beginPath();ctx.arc(W*.42-66+(i*17)%132,H*.66+(i%2)*10,4,0,Math.PI*2);ctx.fill()}
+  const panX=W*.48,panY=H*.70;
+  stovePan(panX,panY,true);
+  if(Math.random()<.06)soundSizzle();
+  if(Math.random()<.025)soundFlame();
+  S.cook.level=Math.min(100,S.cook.level+dt*.0065);meter(S.cook.level);
+  pancakeAt(panX,panY-10,S.cook.level/115,1);
+  for(let i=0;i<Math.floor(S.cook.level/8);i++){
+    ctx.fillStyle="#fff0ad";ctx.beginPath();
+    ctx.arc(panX-66+(i*17)%132,panY-18+(i%2)*10,4,0,Math.PI*2);ctx.fill()
+  }
   if(S.cook.level>=100&&!locked)beginTransition("cook",1350)
  }
  if(stage===6){
-  pan();pancake(H*.67,.86);let x=drag?.kind==="spatula"?drag.x:W*.80,y=drag?.kind==="spatula"?drag.y:H*.35;if(!drag)toolGlow(W*.80,H*.35,90);spatula(x,y,drag?.r||0)
+  const panX=W*.48,panY=H*.70;
+  stovePan(panX,panY,true);pancakeAt(panX,panY-10,.86,1);
+  let x=drag?.kind==="spatula"?drag.x:W*.82,y=drag?.kind==="spatula"?drag.y:H*.39;
+  if(!drag)toolGlow(W*.82,H*.39,90);spatula(x,y,drag?.r||0)
  }
  if(stage===7){
   if(!S.decor.honeyDone){
@@ -306,9 +374,9 @@ c.onpointerdown=e=>{
  if(stage===0&&near(q,W*.80,H*.35,130))drag={kind:"egg",x:q.x,y:q.y};
  else if(stage===1&&near(q,W*.81,H*.31,135))drag={kind:"milk",x:q.x,y:q.y,rot:0};
  else if(stage===2&&near(q,W*.81,H*.31,140))drag={kind:"flour",x:q.x,y:q.y};
- else if(stage===3&&near(q,W*.81,H*.31,135))drag={kind:"whisk",x:q.x,y:q.y,a:null,total:0};
- else if(stage===4&&near(q,W*.81,H*.30,140))drag={kind:"ladle",x:q.x,y:q.y};
- else if(stage===6&&near(q,W*.80,H*.35,140))drag={kind:"spatula",x:q.x,y:q.y,inserted:false};
+ else if(stage===3&&near(q,W*.82,H*.40,145))drag={kind:"whisk",x:q.x,y:q.y,a:null,total:0};
+ else if(stage===4&&near(q,W*.82,H*.38,145))drag={kind:"ladle",x:q.x,y:q.y};
+ else if(stage===6&&near(q,W*.82,H*.39,145))drag={kind:"spatula",x:q.x,y:q.y,inserted:false};
 
  else if(stage===7&&S.decor.honeyDone){
    let types=["strawberry","banana","blueberry","chocolate","cream","broccoli","fish","onion"];
@@ -356,38 +424,38 @@ c.onpointermove=e=>{
  }
 
  if(drag?.kind==="whisk"){
-  let dx=q.x-bx,dy=q.y-by,inside=Math.abs(dx)<120&&dy>-115&&dy<15;
+  let dx=q.x-bx,dy=q.y-by,inside=Math.abs(dx)<125&&dy>-150&&dy<15;
   if(inside){
-    drag.y=Math.min(by-48,drag.y+18);
     let a=Math.atan2(dy,dx);
-    if(drag.a!==null){let d=Math.abs(a-drag.a);if(d>Math.PI)d=2*Math.PI-d;if(d<1.25)drag.total+=d}
-    drag.a=a;S.mix.level=Math.min(100,drag.total*2.4);meter(S.mix.level);
-    if(performance.now()-S.mix.lastSound>95){S.mix.lastSound=performance.now();soundMix()}
-    if(S.mix.level>=100)beginTransition("mix",1550)
+    if(drag.a!==null){let d=Math.abs(a-drag.a);if(d>Math.PI)d=2*Math.PI-d;if(d<1.20)drag.total+=d}
+    drag.a=a;S.mix.level=Math.min(100,drag.total*2.15);meter(S.mix.level);
+    if(performance.now()-S.mix.lastSound>90){S.mix.lastSound=performance.now();soundMix()}
+    if(S.mix.level>=100)beginTransition("mix",1650)
   }else drag.a=null
  }
 
  if(drag?.kind==="ladle"){
-  const bowlHit=near(q,bx,by-8,135);
-  const panX=W*.34,panY=H*.82;
-  const panHit=near(q,panX,panY,160);
+  const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
+  const bowlHit=near(q,bowlX,bowlY-5,118);
+  const panHit=near(q,panX,panY-45,170);
   if(bowlHit&&!S.pour.hasBatter){
-    S.pour.loaded=Math.min(100,S.pour.loaded+2.0);
+    S.pour.loaded=Math.min(100,S.pour.loaded+2.4);
     meter(Math.min(45,S.pour.loaded*.45));
-    if(performance.now()-S.pour.lastSound>150){S.pour.lastSound=performance.now();soundScoop()}
+    if(performance.now()-S.pour.lastSound>140){S.pour.lastSound=performance.now();soundScoop()}
     if(S.pour.loaded>=100){S.pour.hasBatter=true;msg("✨");soundPlop()}
   }
   if(S.pour.hasBatter&&panHit){
-    S.pour.level=Math.min(100,S.pour.level+1.0);meter(45+S.pour.level*.55);
-    if(performance.now()-S.pour.lastSound>120){S.pour.lastSound=performance.now();soundPour()}
-    if(S.pour.level>=100)beginTransition("pour",1450)
+    S.pour.level=Math.min(100,S.pour.level+1.2);meter(45+S.pour.level*.55);
+    if(performance.now()-S.pour.lastSound>110){S.pour.lastSound=performance.now();soundPour()}
+    if(S.pour.level>=100)beginTransition("pour",1500)
   }
  }
 
  if(drag?.kind==="spatula"){
-  let under=Math.abs(q.x-W*.42)<135&&q.y>H*.61&&q.y<H*.73;
+  const panX=W*.48,panY=H*.70;
+  let under=Math.abs(q.x-panX)<145&&q.y>panY-70&&q.y<panY+35;
   if(under){drag.inserted=true;S.flip.insert=Math.min(100,S.flip.insert+1.0);meter(Math.min(70,S.flip.insert))}
-  if(drag.inserted&&q.y<H*.52&&S.flip.insert>35){drag=null;beginTransition("flip",1550)}
+  if(drag.inserted&&q.y<panY-150&&S.flip.insert>35){drag=null;beginTransition("flip",1550)}
  }
 
  if(drag?.kind==="decor"){drag.o.x=q.x;drag.o.y=q.y}
