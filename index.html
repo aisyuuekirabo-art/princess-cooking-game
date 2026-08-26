@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Complete v23</title>
+<title>Princess Cooking Studio - Pancake Princess Complete v24</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -24,9 +24,9 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 #decorControls button{border:0;border-radius:16px;padding:11px 14px;font-weight:900;font-size:14px;box-shadow:0 3px 10px #0002}
 #undoBtn{background:#fff;color:#795a69}
 #finishBtn{background:#ff78aa;color:#fff}
-#finalCard{display:none;position:absolute;left:3%;right:3%;top:54px;height:126px;z-index:12;background:#fffdfbea;border-radius:24px;box-shadow:0 8px 26px #0002;padding:8px 12px;align-items:center;gap:8px}
-#finalCard.show{display:grid;grid-template-columns:92px 1fr 86px}
-#finalCard .princessStage{position:relative;height:104px;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fff8fd,#fff3cf);border-radius:18px;overflow:hidden;margin:0}
+#finalCard{display:none;position:absolute;left:3%;right:3%;top:48px;min-height:138px;z-index:12;background:#fffdfbea;border-radius:24px;box-shadow:0 8px 26px #0002;padding:8px 12px;align-items:center;gap:8px}
+#finalCard.show{display:grid;grid-template-columns:78px minmax(0,1fr) 78px}
+#finalCard .princessStage{position:relative;height:96px;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fff8fd,#fff3cf);border-radius:18px;overflow:hidden;margin:0}
 #finalCard .princess{font-size:58px;line-height:1;filter:drop-shadow(0 3px 5px #0002);animation:royalPop .65s ease-out}
 #finalCard .accessories{position:absolute;left:2px;right:2px;bottom:4px;font-size:17px;letter-spacing:2px;animation:royalPop .8s .2s both}
 #finalCard .sparkles{position:absolute;inset:4px;font-size:15px;color:#e2ae2f;letter-spacing:4px;animation:twinkle .8s infinite alternate}
@@ -34,9 +34,9 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 @keyframes royalPop{from{opacity:0;transform:scale(.45) translateY(25px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes twinkle{from{opacity:.35;transform:scale(.92)}to{opacity:1;transform:scale(1.08)}}
 #finalCard .resultCopy{text-align:center;min-width:0}
-#finalCard .big{font-size:18px;font-weight:1000;color:#7e526c;margin:0 0 3px}
-#finalCard .small{font-size:12px;font-weight:800;color:#8d7180;line-height:1.25}
-#finalCard button{margin:0;border:0;border-radius:15px;background:#ff78aa;color:#fff;font-weight:900;font-size:12px;padding:10px 7px}
+#finalCard .big{font-size:17px;line-height:1.15;overflow-wrap:anywhere;font-weight:1000;color:#7e526c;margin:0 0 3px}
+#finalCard .small{font-size:11px;font-weight:800;color:#8d7180;line-height:1.25;overflow-wrap:anywhere}
+#finalCard button{margin:0;border:0;border-radius:15px;background:#ff78aa;color:#fff;font-weight:900;font-size:11px;line-height:1.15;padding:10px 5px;white-space:normal}
 #photoLabel{display:none;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:10;background:#fffdf0dd;border-radius:18px;padding:6px 12px;color:#7d596c;font-size:12px;font-weight:900;box-shadow:0 2px 10px #0001;pointer-events:none}
 </style>
 </head>
@@ -434,7 +434,23 @@ function draw(){
   S.decor.items.forEach(o=>topping(o.type,o.x,o.y,o.s||.78));
   drawSparkles();
   if(S.decor.done){
-    ctx.strokeStyle="#ffd95e";ctx.lineWidth=5;ctx.globalAlpha=.45+.2*Math.sin(performance.now()/220);
+    // appetizing finish: toasted edge, butter, glossy syrup and warm highlights
+    const topY=H*.61-2*36;
+    let toast=ctx.createRadialGradient(W*.46,topY-12,18,W/2,topY,W*.34);
+    toast.addColorStop(0,"#f8d98b");toast.addColorStop(.58,"#dfa24e");toast.addColorStop(1,"#b96f2e");
+    ctx.globalAlpha=.36;ctx.fillStyle=toast;ctx.beginPath();ctx.ellipse(W/2,topY,W*.385,43,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    // butter pat
+    ctx.save();ctx.translate(W*.47,topY-10);ctx.rotate(-.08);
+    ctx.fillStyle="#ffe57a";ctx.shadowColor="#c98d2b66";ctx.shadowBlur=8;ctx.fillRect(-23,-9,46,18);
+    ctx.fillStyle="#fff4ae";ctx.fillRect(-19,-7,38,5);ctx.restore();
+    // syrup ribbon and gloss
+    ctx.strokeStyle="#c77b20";ctx.lineWidth=12;ctx.lineCap="round";ctx.globalAlpha=.72;
+    ctx.beginPath();ctx.moveTo(W*.37,topY-2);ctx.bezierCurveTo(W*.44,topY+12,W*.55,topY-16,W*.64,topY+5);ctx.stroke();
+    ctx.strokeStyle="#ffd66b";ctx.lineWidth=3;ctx.globalAlpha=.8;
+    ctx.beginPath();ctx.moveTo(W*.39,topY-5);ctx.bezierCurveTo(W*.47,topY+5,W*.54,topY-13,W*.62,topY+1);ctx.stroke();
+    ctx.globalAlpha=1;
+    // warm plate glow
+    ctx.strokeStyle="#ffd95e";ctx.lineWidth=5;ctx.globalAlpha=.38+.15*Math.sin(performance.now()/220);
     ctx.beginPath();ctx.ellipse(W/2,H*.70,W*.45,90,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1
   }
 
