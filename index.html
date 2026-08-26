@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v49</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v50</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v49</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v50</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -495,6 +495,37 @@ function whisk(x,y,inserted=false){
  }
  ctx.restore()
 }
+
+function bowlFrontMask(x,y,sc=1){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(sc,sc);
+
+  // front wall of the same blue bowl
+  let g=ctx.createLinearGradient(0,0,0,190);
+  g.addColorStop(0,"#dff6ff");
+  g.addColorStop(.38,"#b9e8fb");
+  g.addColorStop(1,"#73c8ec");
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(-155,-20);
+  ctx.bezierCurveTo(-145,85,-95,165,0,175);
+  ctx.bezierCurveTo(95,165,145,85,155,-20);
+  ctx.lineTo(145,-7);
+  ctx.bezierCurveTo(130,80,85,145,0,153);
+  ctx.bezierCurveTo(-85,145,-130,80,-145,-7);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle="#62bfe7";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(-145,-7);
+  ctx.bezierCurveTo(-130,80,-85,145,0,153);
+  ctx.bezierCurveTo(85,145,130,80,145,-7);
+  ctx.stroke();
+  ctx.restore();
+}
 function ladle(x,y,filled=false){
  ctx.save();
  ctx.translate(x,y);
@@ -646,16 +677,15 @@ function drawTransition(){
    bowlAt(bowlX,bowlY,.82);
    let q=ease01(t);
    let lx=W*.79+(bowlX-W*.79)*q;
-   let ly=H*.40+(bowlY-38-H*.40)*q;
+   let ly=H*.40+(bowlY-20-H*.40)*q;
    ladle(lx,ly,q>.44);
 
    if(q>.42){
      ctx.save();
-     ctx.fillStyle="#e3b866";ctx.globalAlpha=.98;
+     ctx.fillStyle="#e3b866";
      ctx.beginPath();ctx.ellipse(bowlX,bowlY-35*.82,126*.82,29*.82,0,0,Math.PI*2);ctx.fill();
-     ctx.beginPath();ctx.rect(0,0,W,bowlY-35*.82+5);ctx.clip();
-     ladle(lx,ly,true);
      ctx.restore();
+     bowlFrontMask(bowlX,bowlY,.82);
    }
    if(q>.58&&Math.random()<.12)soundScoop()
  }
@@ -774,7 +804,7 @@ function drawTransition(){
      // continue from the exact scooped position, then lift out
      const q=ease01(t/.20);
      lx=bowlX;
-     ly=(bowlY-38)+(bowlY-145-(bowlY-38))*q;
+     ly=(bowlY-20)+(bowlY-145-(bowlY-20))*q;
      ladle(lx,ly,true);
    }else if(t<.68){
      // carry it clearly ABOVE the pan
@@ -868,37 +898,26 @@ function draw(){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
   bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
 
-  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;
   if(S.tapSeq.step>0){
-    // cup is pushed visibly into the batter
-    ladle(bowlX,bowlY-38,true);
-  }else{
-    ladle(W*.79,H*.40,false);
-  }
-  ctx.restore();
+    // Ladle is inside the bowl: cup is intentionally below the liquid surface.
+    ladle(bowlX,bowlY-20,true);
 
-  if(S.tapSeq.step>0){
-    // liquid surface passes in FRONT of the lower part of the ladle cup
+    // Batter covers the submerged scoop.
     ctx.save();
     ctx.fillStyle="#e3b866";
-    ctx.globalAlpha=.98;
     ctx.beginPath();
     ctx.ellipse(bowlX,bowlY-35*.82,126*.82,29*.82,0,0,Math.PI*2);
     ctx.fill();
-
-    // redraw only the upper visible part of the ladle above the surface
+    ctx.strokeStyle="#fff0bd";ctx.lineWidth=3;ctx.globalAlpha=.55;
     ctx.beginPath();
-    ctx.rect(0,0,W,bowlY-35*.82+5);
-    ctx.clip();
-    ladle(bowlX,bowlY-38,true);
+    ctx.ellipse(bowlX,bowlY-35*.82,76,13,0,0,Math.PI*2);
+    ctx.stroke();
     ctx.restore();
 
-    // batter swirl remains visible
-    ctx.save();
-    ctx.strokeStyle="#fff0bd";ctx.lineWidth=3;ctx.globalAlpha=.5;
-    ctx.beginPath();
-    ctx.ellipse(bowlX,bowlY-35*.82,76,13,0,0,Math.PI*2);ctx.stroke();
-    ctx.restore();
+    // Most important fix: bowl front wall sits in FRONT of the submerged ladle.
+    bowlFrontMask(bowlX,bowlY,.82);
+  }else{
+    ladle(W*.79,H*.40,false);
   }
  }
  if(stage===5){
