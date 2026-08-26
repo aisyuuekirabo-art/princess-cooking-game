@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Complete v24</title>
+<title>Princess Cooking Studio - Pancake Princess Complete v25</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -28,7 +28,7 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 #finalCard.show{display:grid;grid-template-columns:78px minmax(0,1fr) 78px}
 #finalCard .princessStage{position:relative;height:96px;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fff8fd,#fff3cf);border-radius:18px;overflow:hidden;margin:0}
 #finalCard .princess{font-size:58px;line-height:1;filter:drop-shadow(0 3px 5px #0002);animation:royalPop .65s ease-out}
-#finalCard .accessories{position:absolute;left:2px;right:2px;bottom:4px;font-size:17px;letter-spacing:2px;animation:royalPop .8s .2s both}
+#finalCard .accessories{display:none}
 #finalCard .sparkles{position:absolute;inset:4px;font-size:15px;color:#e2ae2f;letter-spacing:4px;animation:twinkle .8s infinite alternate}
 #unlockText{margin-top:3px;color:#c17496!important}
 @keyframes royalPop{from{opacity:0;transform:scale(.45) translateY(25px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -70,14 +70,50 @@ const S={
 
 function resize(){let r=c.getBoundingClientRect();D=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}
 addEventListener("resize",resize);resize();
-function beep(f=500,d=.05,v=.015,type="sine"){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();audio.resume();let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;o.connect(g);g.connect(audio.destination);g.gain.value=v;g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.start();o.stop(audio.currentTime+d)}catch(e){}}
-function soundTap(){beep(540,.035,.012,"triangle")}
-function soundPour(){beep(190,.045,.010,"sine")}
-function soundMix(){beep(118,.035,.010,"triangle")}
-function soundScoop(){beep(235,.05,.012,"sine")}
-function soundSizzle(){beep(92,.035,.006,"sawtooth")}
-function soundPlop(){beep(165,.07,.018,"sine")}
-function soundFlame(){beep(72,.035,.004,"sine")}
+const MASTER_VOL=2.6;
+function ensureAudio(){
+ if(!audio){
+   audio=new(window.AudioContext||window.webkitAudioContext)();
+ }
+ if(audio.state==="suspended")audio.resume();
+ return audio;
+}
+function beep(f=500,d=.05,v=.015,type="sine"){
+ if(!sound)return;
+ try{
+   const ac=ensureAudio(),o=ac.createOscillator(),g=ac.createGain();
+   o.type=type;o.frequency.value=f;o.connect(g);g.connect(ac.destination);
+   g.gain.value=Math.min(.12,v*MASTER_VOL);
+   g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);
+   o.start();o.stop(ac.currentTime+d)
+ }catch(e){}
+}
+function noiseBurst(d=.08,v=.018,filter=900){
+ if(!sound)return;
+ try{
+   const ac=ensureAudio(),len=Math.max(1,Math.floor(ac.sampleRate*d));
+   const b=ac.createBuffer(1,len,ac.sampleRate),data=b.getChannelData(0);
+   for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*(1-i/len);
+   const src=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+   src.buffer=b;f.type="lowpass";f.frequency.value=filter;
+   g.gain.value=Math.min(.12,v*MASTER_VOL);
+   src.connect(f);f.connect(g);g.connect(ac.destination);src.start()
+ }catch(e){}
+}
+function soundTap(){noiseBurst(.045,.018,1200);beep(420,.035,.012,"triangle")}
+function soundPour(){noiseBurst(.11,.012,650);beep(145,.07,.008,"sine")}
+function soundMix(){noiseBurst(.05,.010,520);beep(105,.04,.008,"triangle")}
+function soundScoop(){noiseBurst(.055,.014,800);beep(210,.055,.012,"sine")}
+function soundSizzle(){noiseBurst(.09,.012,2200)}
+function soundPlop(){noiseBurst(.045,.020,500);beep(125,.085,.022,"sine")}
+function soundFlame(){noiseBurst(.045,.005,300)}
+function soundCrack(){noiseBurst(.055,.026,1400);beep(185,.045,.018,"square")}
+function soundComplete(){
+ if(!sound)return;
+ beep(660,.10,.020,"triangle");
+ setTimeout(()=>beep(880,.11,.020,"triangle"),90);
+ setTimeout(()=>beep(1100,.15,.022,"sine"),180);
+}
 function msg(s){toast.textContent=s;toast.classList.add("on");setTimeout(()=>toast.classList.remove("on"),520)}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
 function meter(v){fill.style.width=Math.max(0,Math.min(100,v))+"%"}
@@ -99,7 +135,7 @@ function updateGuide(){guide.textContent=guideText[stage]||"";decorControls.styl
 function beginTransition(type,duration=1200){
  if(locked||transition)return;
  locked=true;drag=null;meter(100);transitionFinishQueued=false;
- transition={type,start:performance.now(),duration};beep(880,.08);
+ transition={type,start:performance.now(),duration};soundComplete();msg("できた！ ✨");
 }
 function finishTransition(){
  if(!transition)return;
@@ -112,7 +148,7 @@ function finishTransition(){
    S.flip.insert=0;
    if(S.flip.count<S.flip.target){
      locked=false;stageStart=performance.now();meter(0);setDots();updateGuide();
-     msg("✨ "+S.flip.count+" / "+S.flip.target);
+     soundComplete();msg("✨ "+S.flip.count+" / "+S.flip.target);
      return;
    }
  }
@@ -311,7 +347,7 @@ function drawTransition(){
  if(transition.type==="mix"){bowl();ctx.fillStyle="#efd38c";ctx.beginPath();ctx.ellipse(bx,by-10,112,27,0,0,Math.PI*2);ctx.fill()}
  if(transition.type==="pour"){pan();pancake(H*.67,.05,1+e*.04)}
  if(transition.type==="cook"){stovePan(W*.48,H*.70,true);pancakeAt(W*.48,H*.69,.86,1)}
- if(transition.type==="flip"){stovePan(W*.48,H*.70,true);let lift=Math.sin(t*Math.PI)*175,rot=t*Math.PI*2.8;ctx.save();ctx.translate(W*.48,H*.69-lift);ctx.rotate(rot);ctx.scale(1+.08*Math.sin(t*Math.PI),1+.08*Math.sin(t*Math.PI));let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);grad.addColorStop(0,"#e4b666");grad.addColorStop(1,"#b66f32");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();ctx.restore();spatula(W*.48+80*(1-e),H*.69+35*(1-e),-.2)}
+ if(transition.type==="flip"){stovePan(W*.48,H*.70,true);let lift=Math.sin(t*Math.PI)*175,rot=t*Math.PI*2.8;ctx.save();ctx.translate(W*.48,H*.69-lift);ctx.rotate(rot);ctx.scale(1+.08*Math.sin(t*Math.PI),1+.08*Math.sin(t*Math.PI));let grad=ctx.createRadialGradient(-20,-10,15,0,0,105);grad.addColorStop(0,"#e4b666");grad.addColorStop(1,"#b66f32");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,102,36,0,0,Math.PI*2);ctx.fill();ctx.restore();spatula(W*.48+80*(1-e),H*.69+35*(1-e),Math.PI-.2)}
  if(t>=1&&!transitionFinishQueued){transitionFinishQueued=true;setTimeout(finishTransition,60)}
  return true
 }
@@ -390,13 +426,13 @@ function draw(){
     const lift=Math.max(0,Math.min(100,(drag.startY-drag.fingerY)));
     pancakeAt(panX,panY-10-lift*.28,.86,1);
     // spatula appears already inserted under the pancake, then follows the upward swipe
-    spatula(panX+12,panY+24-lift*.25,-0.42+lift*.008);
+    spatula(panX+12,panY+24-lift*.25,Math.PI-0.42+lift*.008);
   }else{
     pancakeAt(panX,panY-10,.86,1);
     // subtle inserted-tool hint, not something the child has to grab
     if(!drag){
       ctx.globalAlpha=.55+.18*Math.sin(performance.now()/180);
-      spatula(panX+110,panY+25,-0.38);
+      spatula(panX+110,panY+25,Math.PI-0.38);
       ctx.globalAlpha=1
     }
   }
@@ -436,9 +472,6 @@ function draw(){
   if(S.decor.done){
     // appetizing finish: toasted edge, butter, glossy syrup and warm highlights
     const topY=H*.61-2*36;
-    let toast=ctx.createRadialGradient(W*.46,topY-12,18,W/2,topY,W*.34);
-    toast.addColorStop(0,"#f8d98b");toast.addColorStop(.58,"#dfa24e");toast.addColorStop(1,"#b96f2e");
-    ctx.globalAlpha=.36;ctx.fillStyle=toast;ctx.beginPath();ctx.ellipse(W/2,topY,W*.385,43,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
     // butter pat
     ctx.save();ctx.translate(W*.47,topY-10);ctx.rotate(-.08);
     ctx.fillStyle="#ffe57a";ctx.shadowColor="#c98d2b66";ctx.shadowBlur=8;ctx.fillRect(-23,-9,46,18);
@@ -481,6 +514,7 @@ function pt(e){let r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.cli
 function near(q,x,y,r){return Math.hypot(q.x-x,q.y-y)<r}
 
 c.onpointerdown=e=>{
+ if(sound){try{ensureAudio()}catch(err){}}
  if(locked||transition)return;let q=pt(e);c.setPointerCapture(e.pointerId);stageStart=performance.now();
 
  if(stage===0&&near(q,W*.80,H*.35,130))drag={kind:"egg",x:q.x,y:q.y-34,ox:0,oy:-34};
@@ -493,7 +527,7 @@ c.onpointerdown=e=>{
    soundTap();msg("↑")
  }
 
- else if(stage===7&&S.decor.honeyDone){
+ else if(stage===7&&S.decor.honeyDone&&!S.decor.done){
    let types=["strawberry","banana","blueberry","chocolate","cream","butter","kiwi","raspberry","cookie","broccoli","fish","onion"];
    let hitType=null;
    types.forEach((t,i)=>{let col=i%6,row=Math.floor(i/6),x=W*(.075+col*.17),y=H*(.205+row*.082);if(near(q,x,y,30))hitType=t});
@@ -513,7 +547,7 @@ c.onpointermove=e=>{
   let tx=bx+105,ty=by-22,bottomY=q.y+52,d=Math.hypot(q.x-tx,bottomY-ty);
   if(d>74)S.egg.armed=true;
   if(d<29&&S.egg.armed&&performance.now()-S.egg.lastHit>430){
-   S.egg.armed=false;S.egg.lastHit=performance.now();S.egg.hits++;meter(S.egg.hits*28);beep(175+S.egg.hits*35,.06,.02,"square");
+   S.egg.armed=false;S.egg.lastHit=performance.now();S.egg.hits++;meter(S.egg.hits*28);soundCrack();
    if(S.egg.hits>=3){S.egg.opened=true;drag=null;beginTransition("egg",1650)}
   }
  }
@@ -602,7 +636,7 @@ document.querySelector("#undoBtn").onclick=()=>{
 };
 document.querySelector("#finishBtn").onclick=()=>{
  if(stage!==7||!S.decor.honeyDone||S.decor.done)return;
- S.decor.done=true;decorControls.style.display="none";meter(100);beep(980,.10);
+ S.decor.done=true;drag=null;decorControls.style.display="none";meter(100);soundComplete();
  let variety=new Set(S.decor.items.map(o=>o.type)).size;
  // 100点固定にならないよう、操作ミス・やり直し・盛り付けの種類を評価に反映
  let score=Math.max(55,Math.min(100,94-S.score.penalty-Math.max(0,4-variety)*3+Math.min(6,variety)));
@@ -619,7 +653,11 @@ document.querySelector("#finishBtn").onclick=()=>{
 };
 document.querySelector("#againBtn").onclick=()=>location.reload();
 
-document.querySelector("#snd").onclick=e=>{sound=!sound;e.currentTarget.textContent=sound?"♪":"×";beep(700)};
+document.addEventListener("pointerdown",()=>{if(sound){try{ensureAudio()}catch(e){}}},{once:true});
+document.querySelector("#snd").onclick=e=>{
+ sound=!sound;e.currentTarget.textContent=sound?"♪":"×";
+ if(sound){try{ensureAudio()}catch(err){};beep(700,.08,.025,"triangle")}
+};
 document.querySelector("#home").onclick=()=>location.reload();
 setDots();updateGuide();requestAnimationFrame(draw);
 </script>
