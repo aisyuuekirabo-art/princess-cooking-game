@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v40</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v41</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v40</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v41</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -562,9 +562,12 @@ function drawTransition(){
  if(transition.type==="scoopOnly"){
    const bowlX=W*.28,bowlY=H*.55;
    bowlAt(bowlX,bowlY,.82);
-   let q=ease01(t),lx=W*.79+(bowlX-W*.79)*q,ly=H*.40+(bowlY-82-H*.40)*q;
-   ladle(lx,ly,q>.50);
-   if(q>.62&&Math.random()<.12)soundScoop()
+   let q=ease01(t);
+   // tip enters the bowl; handle stays visible above the rim
+   let lx=W*.79+(bowlX-W*.79)*q;
+   let ly=H*.40+(bowlY-42-H*.40)*q;
+   ladle(lx,ly,q>.44);
+   if(q>.58&&Math.random()<.12)soundScoop()
  }
  if(transition.type==="egg"){
    bowl();
@@ -675,17 +678,34 @@ function drawTransition(){
  if(transition.type==="pour"){
    const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
    bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
-   // continue directly from the loaded ladle at the bowl
    let lx,ly;
-   if(t<.22){
-     let q=ease01(t/.22);lx=bowlX;ly=bowlY-82-q*10;ladle(lx,ly,true)
+
+   if(t<.20){
+     // lift out of bowl first
+     const q=ease01(t/.20);
+     lx=bowlX;
+     ly=(bowlY-42)+(bowlY-125-(bowlY-42))*q;
+     ladle(lx,ly,true);
+   }else if(t<.68){
+     // carry it clearly ABOVE the pan
+     const q=ease01((t-.20)/.48);
+     lx=bowlX+(panX-bowlX)*q;
+     ly=bowlY-125+(panY-185-(bowlY-125))*q;
+     ladle(lx,ly,true);
    }else{
-     let q=ease01((t-.22)/.78);lx=bowlX+(panX-bowlX)*q;ly=bowlY-92+(panY-110-(bowlY-92))*q;
-     ctx.save();ctx.translate(lx,ly);ctx.rotate(-.65*q);ctx.translate(-lx,-ly);ladle(lx,ly,true);ctx.restore();
-     if(q>.52){
+     // stay above pan and tilt only at the end
+     const q=ease01((t-.68)/.32);
+     lx=panX;ly=panY-185;
+     ctx.save();
+     ctx.translate(lx,ly);ctx.rotate(-.82*q);ctx.translate(-lx,-ly);
+     ladle(lx,ly,true);
+     ctx.restore();
+
+     if(q>.18){
+       const amount=Math.min(1,(q-.18)/.82);
        ctx.strokeStyle="#edcf87";ctx.lineWidth=15;ctx.lineCap="round";
-       ctx.beginPath();ctx.moveTo(lx-12,ly+46);ctx.lineTo(lx-12,panY-8);ctx.stroke();
-       pancakeAt(panX,panY-10,.05,Math.min(1,(q-.52)/.48))
+       ctx.beginPath();ctx.moveTo(lx-10,ly+52);ctx.lineTo(panX,panY-12);ctx.stroke();
+       pancakeAt(panX,panY-10,.05,amount)
      }
    }
  }
@@ -753,7 +773,9 @@ function draw(){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
   bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
   ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;
-  if(S.tapSeq.step>0)ladle(bowlX,bowlY-82,true); else ladle(W*.79,H*.40,false);
+  // After the first tap the ladle is visibly sitting INSIDE the batter.
+  if(S.tapSeq.step>0)ladle(bowlX,bowlY-42,true);
+  else ladle(W*.79,H*.40,false);
   ctx.restore()
  }
  if(stage===5){
@@ -806,7 +828,24 @@ function draw(){
   const cakeBase=finalMode?H*.635:H*.64;
   ctx.fillStyle="#bce6fa";ctx.beginPath();ctx.ellipse(W/2,plateCY,W*(finalMode?.47:.49),plateRY,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(W/2,plateCY-6,W*(finalMode?.425:.44),innerRY,0,0,Math.PI*2);ctx.fill();
-  for(let k=0;k<3;k++){let yy=cakeBase-k*33;let grad=ctx.createRadialGradient(W*.45,yy-10,15,W/2,yy,150);grad.addColorStop(0,"#e9bd72");grad.addColorStop(1,"#c98c43");ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(W/2,yy,W*.37,41,0,0,Math.PI*2);ctx.fill()}
+  for(let k=0;k<3;k++){
+    let yy=cakeBase-k*33;
+    // photo-inspired toy-like pancake colors:
+    // pale yellow body with a warm caramel/orange upper face.
+    ctx.fillStyle="#f2df72";
+    ctx.beginPath();ctx.ellipse(W/2,yy+7,W*.37,40,0,0,Math.PI*2);ctx.fill();
+
+    let top=ctx.createRadialGradient(W*.44,yy-10,18,W/2,yy,145);
+    top.addColorStop(0,"#f3a64a");
+    top.addColorStop(.62,"#d9822f");
+    top.addColorStop(1,"#b96622");
+    ctx.fillStyle=top;
+    ctx.beginPath();ctx.ellipse(W/2,yy-5,W*.365,31,0,0,Math.PI*2);ctx.fill();
+
+    ctx.strokeStyle="#f8e98e";ctx.lineWidth=2;ctx.globalAlpha=.55;
+    ctx.beginPath();ctx.ellipse(W/2,yy-5,W*.35,27,0,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
   if(S.decor.honey>0){
     let h=Math.min(1,S.decor.honey/100);
     ctx.fillStyle="#d99820";ctx.globalAlpha=.18+.64*h;
@@ -830,12 +869,12 @@ function draw(){
     const topY=H*.635-2*33;
     // butter pat
     ctx.save();ctx.translate(W*.47,topY-10);ctx.rotate(-.08);
-    ctx.fillStyle="#ffe57a";ctx.shadowColor="#c98d2b66";ctx.shadowBlur=8;ctx.fillRect(-23,-9,46,18);
-    ctx.fillStyle="#fff4ae";ctx.fillRect(-19,-7,38,5);ctx.restore();
+    ctx.fillStyle="#fff08a";ctx.shadowColor="#c98d2b66";ctx.shadowBlur=8;ctx.fillRect(-23,-9,46,18);
+    ctx.fillStyle="#fff7bd";ctx.fillRect(-19,-7,38,5);ctx.restore();
     // syrup ribbon and gloss
-    ctx.strokeStyle="#c77b20";ctx.lineWidth=12;ctx.lineCap="round";ctx.globalAlpha=.72;
+    ctx.strokeStyle="#c96e24";ctx.lineWidth=12;ctx.lineCap="round";ctx.globalAlpha=.72;
     ctx.beginPath();ctx.moveTo(W*.37,topY-2);ctx.bezierCurveTo(W*.44,topY+12,W*.55,topY-16,W*.64,topY+5);ctx.stroke();
-    ctx.strokeStyle="#ffd66b";ctx.lineWidth=3;ctx.globalAlpha=.8;
+    ctx.strokeStyle="#f6b65d";ctx.lineWidth=3;ctx.globalAlpha=.8;
     ctx.beginPath();ctx.moveTo(W*.39,topY-5);ctx.bezierCurveTo(W*.47,topY+5,W*.54,topY-13,W*.62,topY+1);ctx.stroke();
     ctx.globalAlpha=1;
     // warm plate glow
@@ -918,10 +957,10 @@ c.onpointerdown=e=>{
      if(near(q,tx,ty,200)){
        S.tapSeq.step++;
        if(S.tapSeq.step<2){
-         S.pour.hasBatter=true;beginTransition("scoopOnly",1200,false)
+         S.pour.hasBatter=true;beginTransition("scoopOnly",1450,false)
        }else{
          S.pour.loaded=100;S.pour.hasBatter=true;S.pour.level=100;
-         beginTransition("pour",1800,true)
+         beginTransition("pour",2200,true)
        }
        return
      }
