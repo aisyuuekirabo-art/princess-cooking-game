@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v51</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v52</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v51</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v52</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -171,7 +171,7 @@ const BX=()=>W*.40,BY=()=>H*.61;
 const guideText=[
  "おうちの人へ：たまごをタップ！ ボウルの上へ動いて、パカッと割れます。",
  "おうちの人へ：牛乳をタップするとボウルの上へ。そこで待つので、もう1回タップするとゆっくり注ぎます。",
- "おうちの人へ：粉をタップするとボウルの上へ。そこで待つので、もう1回タップするとゆっくりサラサラ入ります。",
+ "おうちの人へ：ホットケーキミックスをタップするとボウルの上へ。そこで待つので、もう1回タップするとゆっくりサラサラ入ります。",
  "おうちの人へ：泡立て器を3回タップ。タップするたび、ダマが減って生地がなめらかになります。",
  "おうちの人へ：おたまをタップすると生地をすくってその場で待ちます。もう1回でフライパンへ運びます。",
  "おうちの人へ：すぐ焼けるよ！ 少しだけ待ってみよう。",
@@ -498,7 +498,7 @@ function flour(x,y,r=0){
  ctx.save();ctx.translate(x,y);ctx.rotate(r);ctx.scale(1.34,1.34);
  ctx.fillStyle="#e7c793";rr(-40,-55,80,110,13);
  ctx.fillStyle="#fff5da";rr(-25,-18,50,44,9);
- ctx.fillStyle="#9a7041";ctx.font="bold 17px sans-serif";ctx.textAlign="center";ctx.fillText("こな",0,10);
+ ctx.fillStyle="#9a7041";ctx.font="bold 17px sans-serif";ctx.textAlign="center";ctx.fillText("HM",0,10);
  // open corner / pouring mouth
  ctx.fillStyle="#c79b63";ctx.beginPath();ctx.moveTo(-40,-55);ctx.lineTo(-20,-72);ctx.lineTo(-4,-55);ctx.closePath();ctx.fill();
  ctx.restore()
@@ -665,7 +665,7 @@ function drawTransition(){
    bowlAt(bowlX,bowlY,.82);
    let q=ease01(t);
    let lx=W*.79+(bowlX-W*.79)*q;
-   let ly=H*.40+(bowlY-69-H*.40)*q;
+   let ly=H*.40+(bowlY-85-H*.40)*q;
    ladle(lx,ly,q>.44);
    if(q>.48)coverLadleCupWithBatter(bowlX,bowlY,.82,"#e3b866");
    if(q>.58&&Math.random()<.12)soundScoop()
@@ -785,7 +785,7 @@ function drawTransition(){
      // continue from the exact scooped position, then lift out
      const q=ease01(t/.20);
      lx=bowlX;
-     ly=(bowlY-69)+(bowlY-145-(bowlY-69))*q;
+     ly=(bowlY-85)+(bowlY-145-(bowlY-85))*q;
      ladle(lx,ly,true);
    }else if(t<.68){
      // carry it clearly ABOVE the pan
@@ -882,7 +882,7 @@ function draw(){
 
   if(S.tapSeq.step>0){
     // Cup center sits at the batter surface, not below the bowl front.
-    ladle(bowlX,bowlY-69,true);
+    ladle(bowlX,bowlY-85,true);
 
     // Batter redraw hides the lower portion of the cup -> looks submerged.
     coverLadleCupWithBatter(bowlX,bowlY,.82,"#e3b866");
