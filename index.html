@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v41</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v42</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v41</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v42</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -377,6 +377,33 @@ function drawMixProgress(){
  ctx.beginPath();ctx.ellipse(bx,by-35,58+10*n,11+2*n,0,0,Math.PI*2);ctx.stroke();
  ctx.restore()
 }
+
+function bowlFrontOverlay(x=BX(),y=BY(),scale=1){
+ ctx.save();
+ ctx.translate(x-BX(),y-BY());
+ ctx.scale(scale,scale);
+ const bx=BX(),by=BY();
+ // front half of bowl body only
+ const g=ctx.createLinearGradient(bx,by-10,bx,by+155);
+ g.addColorStop(0,"#bfeaff");
+ g.addColorStop(1,"#8fd0ee");
+ ctx.fillStyle=g;
+ ctx.beginPath();
+ ctx.moveTo(bx-145,by-34);
+ ctx.quadraticCurveTo(bx-125,by+145,bx,by+155);
+ ctx.quadraticCurveTo(bx+125,by+145,bx+145,by-34);
+ ctx.lineTo(bx+145,by-5);
+ ctx.quadraticCurveTo(bx,by+50,bx-145,by-5);
+ ctx.closePath();
+ ctx.fill();
+
+ // front rim to strengthen depth
+ ctx.strokeStyle="#ffffff";ctx.lineWidth=9;
+ ctx.beginPath();ctx.arc(bx,by-35,145,0,Math.PI,false);ctx.stroke();
+ ctx.strokeStyle="#72c4e6";ctx.lineWidth=3;
+ ctx.beginPath();ctx.arc(bx,by-35,134,0,Math.PI,false);ctx.stroke();
+ ctx.restore();
+}
 function bowlAt(x,y,scale=1){
  ctx.save();ctx.translate(x-BX(),y-BY());ctx.scale(scale,scale);bowl();ctx.restore()
 }
@@ -552,8 +579,9 @@ function drawTransition(){
  if(transition.type==="mixBurst"){
    bowl();drawMixProgress();
    const a=t*Math.PI*3.2;
-   const wx=bx+Math.cos(a)*48,wy=by-70+Math.sin(a)*10;
+   const wx=bx+Math.cos(a)*44,wy=by-48+Math.sin(a)*8;
    whisk(wx,wy,true);
+   bowlFrontOverlay();
    ctx.strokeStyle="#f7e4a6";ctx.lineWidth=5;ctx.globalAlpha=.55;
    ctx.beginPath();ctx.ellipse(bx,by-34,76+S.tapSeq.step*8,16,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
    if(Math.random()<.18)soundMix()
@@ -563,10 +591,10 @@ function drawTransition(){
    const bowlX=W*.28,bowlY=H*.55;
    bowlAt(bowlX,bowlY,.82);
    let q=ease01(t);
-   // tip enters the bowl; handle stays visible above the rim
    let lx=W*.79+(bowlX-W*.79)*q;
-   let ly=H*.40+(bowlY-42-H*.40)*q;
+   let ly=H*.40+(bowlY-18-H*.40)*q;
    ladle(lx,ly,q>.44);
+   if(q>.30)bowlFrontOverlay(bowlX,bowlY,.82);
    if(q>.58&&Math.random()<.12)soundScoop()
  }
  if(transition.type==="egg"){
@@ -668,8 +696,9 @@ function drawTransition(){
  if(transition.type==="mix"){
    bowl();drawMixProgress();
    const a=t*Math.PI*6.2;
-   const wx=bx+Math.cos(a)*55,wy=by-68+Math.sin(a)*12;
+   const wx=bx+Math.cos(a)*48,wy=by-48+Math.sin(a)*9;
    whisk(wx,wy,true);
+   bowlFrontOverlay();
    ctx.strokeStyle="#fff0a4";ctx.lineWidth=6;ctx.globalAlpha=.65;
    ctx.beginPath();ctx.ellipse(bx,by-18,86,20,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;
    if(Math.random()<.16)soundMix()
@@ -680,15 +709,16 @@ function drawTransition(){
    bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
    let lx,ly;
 
-   if(t<.20){
-     // lift out of bowl first
-     const q=ease01(t/.20);
+   if(t<.24){
+     // lift out of bowl first; front of bowl hides the ladle bowl until it clears the rim
+     const q=ease01(t/.24);
      lx=bowlX;
-     ly=(bowlY-42)+(bowlY-125-(bowlY-42))*q;
+     ly=(bowlY-18)+(bowlY-125-(bowlY-18))*q;
      ladle(lx,ly,true);
+     if(q<.72)bowlFrontOverlay(bowlX,bowlY,.82);
    }else if(t<.68){
      // carry it clearly ABOVE the pan
-     const q=ease01((t-.20)/.48);
+     const q=ease01((t-.24)/.44);
      lx=bowlX+(panX-bowlX)*q;
      ly=bowlY-125+(panY-185-(bowlY-125))*q;
      ladle(lx,ly,true);
@@ -766,17 +796,27 @@ function draw(){
  if(stage===3){
   bowl();drawMixProgress();
   ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;
-  if(S.tapSeq.step>0)whisk(BX(),BY()-70,true); else whisk(W*.79,H*.40,false);
-  ctx.restore()
+  if(S.tapSeq.step>0){
+    whisk(BX(),BY()-48,true);
+    ctx.restore();
+    bowlFrontOverlay();
+  }else{
+    whisk(W*.79,H*.40,false);
+    ctx.restore();
+  }
  }
  if(stage===4){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
   bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
   ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;
-  // After the first tap the ladle is visibly sitting INSIDE the batter.
-  if(S.tapSeq.step>0)ladle(bowlX,bowlY-42,true);
-  else ladle(W*.79,H*.40,false);
-  ctx.restore()
+  if(S.tapSeq.step>0){
+    ladle(bowlX,bowlY-18,true);
+    ctx.restore();
+    bowlFrontOverlay(bowlX,bowlY,.82);
+  }else{
+    ladle(W*.79,H*.40,false);
+    ctx.restore();
+  }
  }
  if(stage===5){
   // Easy mode: short baking time, about 2.2 seconds.
