@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v32</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v33</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -44,6 +44,9 @@ font:900 10px/1.2 -apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;le
 color:#b5748e;background:#fff9fbd9;border:1px solid #f4d6e3;border-radius:999px;padding:5px 12px;
 box-shadow:0 3px 12px #c98aa522;pointer-events:none;white-space:nowrap}
 
+
+#buildBadge{position:absolute;left:8px;top:8px;z-index:20;background:#9b5b7b;color:#fff;
+font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;box-shadow:0 2px 8px #0002}
 </style>
 </head>
 <body>
@@ -52,7 +55,7 @@ box-shadow:0 3px 12px #c98aa522;pointer-events:none;white-space:nowrap}
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v33</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -434,8 +437,8 @@ function drawTransition(){
    bowl();
    // egg travels to rim, taps 3 times, cracks, then drops into bowl
    let tapPhase=Math.min(1,t/.58);
-   let ex=W*.80+(bx+105-W*.80)*tapPhase;
-   let ey=H*.35+(by-85-H*.35)*tapPhase;
+   let ex=W*.78+(bx+105-W*.78)*tapPhase;
+   let ey=H*.37+(by-85-H*.37)*tapPhase;
    let bob=(t<.58)?Math.abs(Math.sin(t*8*Math.PI))*18:0;
    if(t<.66){
      egg(ex,ey-bob);
@@ -545,9 +548,19 @@ function draw(){
 
  if(stage===0){
   bowl();
-  // Large, clearly tappable egg on the right. No target circle.
-  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=14;
-  egg(W*.80,H*.39);
+
+  // Dedicated egg zone: always visible on stage 0.
+  const ex=W*.78,ey=H*.37;
+  ctx.save();
+  ctx.shadowColor="#0003";ctx.shadowBlur=18;
+  ctx.fillStyle="#fffaf3";rr(ex-67,ey-84,134,168,28);
+  ctx.shadowBlur=0;
+  egg(ex,ey);
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle="#9c5978";ctx.font="900 15px sans-serif";ctx.textAlign="center";
+  ctx.fillText("たまご",ex,ey+70);
   ctx.restore()
  }
  if(stage===1){
@@ -687,7 +700,7 @@ c.onpointerdown=e=>{
  let q=pt(e);stageStart=performance.now();
 
  if(EASY_MODE){
-   if(stage===0&&near(q,W*.80,H*.39,165)){
+   if(stage===0&&near(q,W*.78,H*.37,190)){
      S.egg.hits=3;S.egg.opened=true;soundCrack();beginTransition("egg",1500);return
    }
    if(stage===1&&near(q,W*.78,H*.39,165)){
