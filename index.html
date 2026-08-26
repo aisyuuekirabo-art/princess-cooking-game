@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ultra Easy Tap v30</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v31</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -44,8 +44,6 @@ font:900 10px/1.2 -apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;le
 color:#b5748e;background:#fff9fbd9;border:1px solid #f4d6e3;border-radius:999px;padding:5px 12px;
 box-shadow:0 3px 12px #c98aa522;pointer-events:none;white-space:nowrap}
 
-#easyBadge{position:absolute;left:50%;top:34px;transform:translateX(-50%);z-index:9;background:#ff7dac;color:white;
-font:900 11px sans-serif;padding:6px 12px;border-radius:999px;box-shadow:0 4px 12px #0002;white-space:nowrap;pointer-events:none}
 </style>
 </head>
 <body>
@@ -54,7 +52,7 @@ font:900 11px sans-serif;padding:6px 12px;border-radius:999px;box-shadow:0 4px 1
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="easyBadge">かんたんモード：どこでもタップ</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -163,13 +161,13 @@ function setDots(){dots.textContent=Array.from({length:8},(_,i)=>i===stage?"●"
 const BX=()=>W*.40,BY=()=>H*.61;
 
 const guideText=[
- "おうちの人へ：画面を1回タップすると、たまごを自動で割ります。",
- "おうちの人へ：画面を1回タップすると、牛乳を自動で注ぎます。",
- "おうちの人へ：画面を1回タップすると、粉を自動で入れます。",
- "おうちの人へ：画面を1回タップすると、自動でぐるぐる混ぜます。",
- "おうちの人へ：画面を1回タップすると、生地をすくってフライパンへ入れます。",
+ "おうちの人へ：右にあるたまごをタップ！ あとは自動でコンコンして割ります。",
+ "おうちの人へ：右にある牛乳をタップ！ 自動でボウルへ注ぎます。",
+ "おうちの人へ：右にある粉の袋をタップ！ 自動でボウルへ入ります。",
+ "おうちの人へ：右にある泡立て器をタップ！ 自動でぐるぐる混ぜます。",
+ "おうちの人へ：右にあるおたまをタップ！ 自動ですくってフライパンへ流します。",
  "おうちの人へ：すぐ焼けるよ！ 少しだけ待ってみよう。",
- "おうちの人へ：画面をタップするたびに、自動でパンケーキをひっくり返します。3回できます。",
+ "おうちの人へ：パンケーキをタップ！ 自動でひっくり返します。3回できます。",
  "おうちの人へ：好きなトッピングを選んで、パンケーキをタップしよう。"
 ];
 function updateGuide(){guide.textContent=guideText[stage]||"";decorControls.style.display=(stage===7&&S.decor.honeyDone&&!S.decor.done)?"flex":"none"}
@@ -400,20 +398,8 @@ function drawSparkles(){
 function syrupBottle(x,y,angle=.12){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.scale(1.2,1.2);ctx.fillStyle="#d8a061";rr(-25,-51,50,94,13);ctx.fillStyle="#875026";rr(-20,-41,40,57,9);ctx.fillStyle="#f2d4a9";rr(-10,-67,20,18,4);ctx.restore()}
 function creamBag(x,y){ctx.save();ctx.translate(x,y);ctx.scale(1.15,1.15);ctx.fillStyle="#f5d9ea";ctx.beginPath();ctx.moveTo(-30,-50);ctx.lineTo(30,-50);ctx.lineTo(12,36);ctx.lineTo(-12,36);ctx.closePath();ctx.fill();ctx.fillStyle="#b3a5b7";ctx.beginPath();ctx.moveTo(-7,36);ctx.lineTo(7,36);ctx.lineTo(0,55);ctx.closePath();ctx.fill();ctx.restore()}
 
-function hint(){
- if(drag||locked||transition||performance.now()-stageStart<500)return;
- if([0,1,2,3,4,6].includes(stage)){
-   const x=W*.50,y=H*.25;
-   ctx.save();
-   ctx.globalAlpha=.96;
-   ctx.fillStyle="#fffafdee";ctx.shadowColor="#a85b7a44";ctx.shadowBlur=15;
-   rr(x-88,y-28,176,56,28);ctx.shadowBlur=0;
-   ctx.strokeStyle="#ff6fa8";ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(x-88,y-28,176,56,28);ctx.stroke();
-   ctx.fillStyle="#a35474";ctx.font="900 20px sans-serif";ctx.textAlign="center";
-   ctx.fillText("タップしてね！",x,y+7);
-   ctx.restore()
- }
-}
+function hint(){}
+
 function drawTransition(){
  if(!transition)return false;
  let t=Math.min(1,(performance.now()-transition.start)/transition.duration),
@@ -534,62 +520,26 @@ function draw(){
  bg();let bx=BX(),by=BY();
 
  if(stage===0){
-  bowl();let tx=bx+105,ty=by-22;pulse(tx,ty,25);
-  let x=drag?.kind==="egg"?drag.x:W*.80,y=drag?.kind==="egg"?drag.y:H*.35;egg(x,y)
+  bowl();
+  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;egg(W*.80,H*.39);ctx.restore()
  }
  if(stage===1){
-  bowl();let x=drag?.kind==="milk"?drag.x:W*.81,y=drag?.kind==="milk"?drag.y:H*.33,r=drag?.rot||0;if(!drag)toolGlow(W*.81,H*.24,72);milk(x,y,r);
-  if(drag?.pouring){
-    ctx.strokeStyle="#f8fdff";ctx.lineWidth=13;ctx.lineCap="round";
-    ctx.beginPath();ctx.moveTo(drag.sx,drag.sy);ctx.lineTo(drag.sx,drag.ty);ctx.stroke()
-  }
+  bowl();
+  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;milk(W*.80,H*.39,0);ctx.restore()
  }
  if(stage===2){
   bowl();
-  let x=drag?.kind==="flour"?drag.x:W*.81,y=drag?.kind==="flour"?drag.y:H*.33,r=drag?.rot||0;
-  if(!drag)toolGlow(W*.81,H*.24,72);
-  flour(x,y,r);
-  if(drag?.pouring){
-    ctx.fillStyle="#fff0d1";
-    for(let i=0;i<20;i++){
-      ctx.beginPath();
-      ctx.arc(drag.sx-12+Math.random()*24,drag.sy+Math.random()*(drag.ty-drag.sy),2.2+Math.random()*2,0,Math.PI*2);
-      ctx.fill()
-    }
-  }
+  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;flour(W*.80,H*.39,0);ctx.restore()
  }
  if(stage===3){
   bowl();
-  const inBowl=drag?.kind==="whisk"&&Math.abs(drag.x-BX())<125&&drag.y>BY()-150&&drag.y<BY()+10;
-  let x=drag?.kind==="whisk"?drag.x:W*.82;
-  let y=drag?.kind==="whisk"?drag.y:H*.40;
-  if(!drag)toolGlow(W*.82,H*.40,88);
-  if(inBowl){
-    x=Math.max(BX()-82,Math.min(BX()+82,x));
-    y=BY()-72;
-  }
-  whisk(x,y,inBowl);
-  if(inBowl){
-    ctx.fillStyle="#f1d78f";ctx.globalAlpha=.45;
-    ctx.beginPath();ctx.ellipse(BX(),BY()-8,100,22,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1
-  }
+  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;whisk(W*.80,H*.40,false);ctx.restore()
  }
  if(stage===4){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
   bowlAt(bowlX,bowlY,.82);
   stovePan(panX,panY,true);
-  let x=drag?.kind==="ladle"?drag.x:W*.82,y=drag?.kind==="ladle"?drag.y:H*.38;
-  if(!drag)toolGlow(W*.82,H*.38,92);
-  let overPan=drag?.kind==="ladle"&&near({x:drag.x,y:drag.y},panX,panY-45,165);
-  if(overPan&&S.pour.hasBatter){
-    ctx.save();ctx.translate(x,y);ctx.rotate(-.72);ctx.translate(-x,-y);ladle(x,y,true);ctx.restore();
-    // visible batter stream from ladle to the pan
-    ctx.strokeStyle="#edcf87";ctx.lineWidth=16;ctx.lineCap="round";
-    ctx.beginPath();ctx.moveTo(x-18,y+42);ctx.lineTo(x-18,panY-8);ctx.stroke()
-  }else{
-    ladle(x,y,S.pour.hasBatter)
-  }
-  if(S.pour.level>0)pancakeAt(panX,panY-10,.04,Math.max(.35,S.pour.level/100));
+  ctx.save();ctx.shadowColor="#0002";ctx.shadowBlur=12;ladle(W*.82,H*.40,false);ctx.restore()
  }
  if(stage===5){
   // Easy mode: short baking time, about 2.2 seconds.
@@ -706,30 +656,27 @@ function near(q,x,y,r){return Math.hypot(q.x-x,q.y-y)<r}
 
 c.onpointerdown=e=>{
  if(sound){try{ensureAudio();startBGM()}catch(err){}}
- if(transition)return;
+ if(locked||transition)return;
  let q=pt(e);stageStart=performance.now();
 
- // ULTRA EASY MODE:
- // For all cooking steps, the child can tap ANYWHERE on the game screen.
- // The whole action then plays automatically as an animation.
- if(EASY_MODE&&!locked){
-   if(stage===0){
-     locked=false;S.egg.hits=3;S.egg.opened=true;soundCrack();beginTransition("egg",1500);return
+ if(EASY_MODE){
+   if(stage===0&&near(q,W*.80,H*.39,145)){
+     S.egg.hits=3;S.egg.opened=true;soundCrack();beginTransition("egg",1500);return
    }
-   if(stage===1){
-     locked=false;S.milk.level=100;soundPour();beginTransition("milk",1450);return
+   if(stage===1&&near(q,W*.80,H*.39,150)){
+     S.milk.level=100;soundPour();beginTransition("milk",1450);return
    }
-   if(stage===2){
-     locked=false;S.flour.level=100;noiseBurst(.08,.018,950);beginTransition("flour",1450);return
+   if(stage===2&&near(q,W*.80,H*.39,150)){
+     S.flour.level=100;noiseBurst(.08,.018,950);beginTransition("flour",1450);return
    }
-   if(stage===3){
-     locked=false;S.mix.level=100;soundMix();beginTransition("mix",1400);return
+   if(stage===3&&near(q,W*.80,H*.40,155)){
+     S.mix.level=100;soundMix();beginTransition("mix",1400);return
    }
-   if(stage===4){
-     locked=false;S.pour.loaded=100;S.pour.hasBatter=true;S.pour.level=100;soundScoop();beginTransition("pour",1550);return
+   if(stage===4&&near(q,W*.82,H*.40,155)){
+     S.pour.loaded=100;S.pour.hasBatter=true;S.pour.level=100;soundScoop();beginTransition("pour",1550);return
    }
-   if(stage===6){
-     locked=false;soundPlop();beginTransition("flip",1050);return
+   if(stage===6&&near(q,W*.48,H*.69,190)){
+     soundPlop();beginTransition("flip",1050);return
    }
  }
 
