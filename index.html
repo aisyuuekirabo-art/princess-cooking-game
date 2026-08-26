@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v37</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v38</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v37</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v38</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -216,7 +216,7 @@ function finishTransition(){
    return;
  }
 
- if(finishedType==="egg")S.egg.settled=true;
+ if(finishedType==="egg"){S.egg.opened=true;S.egg.settled=true;}
  stage=Math.min(7,stage+1);
  S.tapSeq.step=0;
  locked=false;stageStart=performance.now();meter(0);setDots();updateGuide();
@@ -839,8 +839,8 @@ c.onpointerdown=e=>{
 
  if(EASY_MODE){
    if(stage===0&&near(q,W*.80,H*.39,190)){
-     S.tapSeq.step=1;S.egg.hits=1;S.egg.opened=true;
-     soundTap();beginTransition("egg",1850,true);return
+     S.tapSeq.step=1;S.egg.hits=1;
+     soundTap();beginTransition("egg",1500,true);return
    }
 
    if(stage===1){
