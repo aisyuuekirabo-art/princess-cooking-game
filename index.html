@@ -19,17 +19,33 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 #fill{height:100%;width:0;background:linear-gradient(90deg,#ffd34e,#ff70a9);transition:.08s}
 #toast{position:absolute;left:50%;top:36px;transform:translateX(-50%);background:#fff;border-radius:30px;padding:7px 15px;font-weight:900;color:#704b5d;box-shadow:0 4px 14px #0002;opacity:0;transition:.18s;white-space:nowrap;z-index:5}
 #toast.on{opacity:1}
+#guide{position:absolute;left:50%;top:31px;transform:translateX(-50%);width:min(88%,620px);padding:7px 12px;border-radius:14px;background:#fffdf4e8;color:#6d5360;font-size:12px;font-weight:800;text-align:center;box-shadow:0 2px 10px #0001;z-index:4;pointer-events:none}
+#decorControls{display:none;position:absolute;right:12px;bottom:14px;gap:8px;z-index:8}
+#decorControls button{border:0;border-radius:16px;padding:11px 14px;font-weight:900;font-size:14px;box-shadow:0 3px 10px #0002}
+#undoBtn{background:#fff;color:#795a69}
+#finishBtn{background:#ff78aa;color:#fff}
+#finalCard{display:none;position:absolute;inset:16% 8% 12%;z-index:12;background:#fffdfbeF;border-radius:28px;box-shadow:0 12px 40px #0003;text-align:center;padding:24px}
+#finalCard .princess{font-size:86px;line-height:1.05}
+#finalCard .big{font-size:28px;font-weight:1000;color:#7e526c;margin:8px 0}
+#finalCard .small{font-size:15px;font-weight:800;color:#8d7180}
+#finalCard button{margin-top:18px;border:0;border-radius:18px;background:#ff78aa;color:#fff;font-weight:900;font-size:16px;padding:12px 20px}
 </style>
 </head>
 <body>
 <div id="app">
 <header><button id="home">←</button><div id="dots">● ○ ○ ○ ○ ○ ○ ○</div><button id="snd">♪</button></header>
-<div id="game"><div id="meter"><div id="fill"></div></div><canvas id="c"></canvas><div id="toast"></div></div>
+<div id="game">
+<div id="meter"><div id="fill"></div></div>
+<div id="guide"></div>
+<canvas id="c"></canvas><div id="toast"></div>
+<div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
+<div id="finalCard"><div class="princess">👸</div><div class="big">プリンセス・クッキング！</div><div class="small">すてきに もりつけできました ✨</div><button id="againBtn">もういちど</button></div>
+</div>
 </div>
 
 <script>
 const c=document.querySelector("#c"),ctx=c.getContext("2d");
-const fill=document.querySelector("#fill"),dots=document.querySelector("#dots"),toast=document.querySelector("#toast");
+const fill=document.querySelector("#fill"),dots=document.querySelector("#dots"),toast=document.querySelector("#toast"),guide=document.querySelector("#guide"),decorControls=document.querySelector("#decorControls"),finalCard=document.querySelector("#finalCard");
 let W=0,H=0,D=1,sound=true,audio=null,stage=0,drag=null,locked=false,stageStart=performance.now();
 let transition=null,lastFrame=performance.now(),transitionFinishQueued=false;
 const S={
@@ -40,7 +56,7 @@ const S={
  pour:{level:0},
  cook:{level:0},
  flip:{insert:0},
- decor:{selected:null,items:[],honey:0,honeyIntro:0,honeyDone:false}
+ decor:{selected:null,items:[],honey:0,honeyIntro:0,honeyDone:false,done:false}
 };
 
 function resize(){let r=c.getBoundingClientRect();D=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;c.width=W*D;c.height=H*D;ctx.setTransform(D,0,0,D,0,0)}
@@ -51,6 +67,18 @@ function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
 function meter(v){fill.style.width=Math.max(0,Math.min(100,v))+"%"}
 function setDots(){dots.textContent=Array.from({length:8},(_,i)=>i===stage?"●":i<stage?"•":"○").join(" ")}
 const BX=()=>W*.40,BY=()=>H*.61;
+
+const guideText=[
+ "おうちの人へ：卵をつかんで、ボウルのふちの丸へ3回コンコン。",
+ "おうちの人へ：牛乳パックを持ってボウルの上へ。注ぎ口から真下に牛乳が落ちます。",
+ "おうちの人へ：粉の袋をボウルの上へ持っていき、入れてあげよう。",
+ "おうちの人へ：泡立て器をボウルに入れて、指でぐるぐる混ぜよう。",
+ "おうちの人へ：おたまで生地をすくって、フライパンへ流そう。",
+ "おうちの人へ：焼ける色と気泡の変化を見ながら少し待とう。",
+ "おうちの人へ：フライ返しをパンケーキの下へ入れて、上へ持ち上げよう。",
+ "おうちの人へ：材料を選んでパンケーキをタップ。間違えたら『1こもどす』。終わったら『できあがり』。"
+];
+function updateGuide(){guide.textContent=guideText[stage]||"";decorControls.style.display=(stage===7&&S.decor.honeyDone&&!S.decor.done)?"flex":"none"}
 
 function beginTransition(type,duration=1200){
  if(locked||transition)return;
@@ -63,22 +91,46 @@ function finishTransition(){
  transition=null;transitionFinishQueued=false;
  if(finishedType==="egg")S.egg.settled=true;
  stage=Math.min(7,stage+1);
- locked=false;stageStart=performance.now();meter(0);setDots();
+ locked=false;stageStart=performance.now();meter(0);setDots();updateGuide();
  if(stage===7){S.decor.honeyIntro=0;S.decor.honey=0;S.decor.honeyDone=false;locked=true;}
 }
 
 function bg(){
  let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#f7eafa");g.addColorStop(.58,"#fff8ef");g.addColorStop(.581,"#d7a57d");g.addColorStop(1,"#b9784f");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ // backsplash
  ctx.fillStyle="#fff4fa";ctx.fillRect(0,0,W,H*.58);
  ctx.strokeStyle="#ead7e4";ctx.lineWidth=1;
  for(let y=0;y<H*.58;y+=38){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
  for(let y=0;y<H*.58;y+=38)for(let x=((y/38)%2)*38-38;x<W;x+=76){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+38);ctx.stroke()}
- ctx.fillStyle="#dff5ff";ctx.beginPath();ctx.arc(W*.18,H*.23,56,Math.PI,0);ctx.lineTo(W*.18+56,H*.40);ctx.lineTo(W*.18-56,H*.40);ctx.closePath();ctx.fill();
+ // window + curtains
+ ctx.fillStyle="#dff5ff";ctx.beginPath();ctx.arc(W*.17,H*.22,56,Math.PI,0);ctx.lineTo(W*.17+56,H*.40);ctx.lineTo(W*.17-56,H*.40);ctx.closePath();ctx.fill();
  ctx.strokeStyle="#fff";ctx.lineWidth=7;ctx.stroke();
- ctx.fillStyle="#f7cfe0";rr(W*.61,H*.15,W*.30,H*.17,18);
- ctx.fillStyle="#fff7fb";rr(W*.635,H*.175,W*.11,H*.12,12);rr(W*.77,H*.175,W*.11,H*.12,12);
- ctx.fillStyle="#d4aa43";ctx.font="28px serif";ctx.textAlign="center";ctx.fillText("♛",W*.755,H*.13);
+ ctx.fillStyle="#f6c8dd";ctx.fillRect(W*.075,H*.17,12,H*.23);ctx.fillRect(W*.255,H*.17,12,H*.23);
+ // upper cabinets
+ ctx.fillStyle="#f7cfe0";rr(W*.61,H*.145,W*.30,H*.18,18);
+ ctx.fillStyle="#fff7fb";rr(W*.635,H*.17,W*.11,H*.125,12);rr(W*.77,H*.17,W*.11,H*.125,12);
+ ctx.fillStyle="#d4aa43";ctx.beginPath();ctx.arc(W*.75,H*.235,4,0,7);ctx.fill();ctx.beginPath();ctx.arc(W*.765,H*.235,4,0,7);ctx.fill();
+ ctx.font="26px serif";ctx.textAlign="center";ctx.fillText("♛",W*.755,H*.13);
+ // shelf with jars
+ ctx.fillStyle="#b77c58";ctx.fillRect(W*.34,H*.235,W*.22,7);
+ for(let i=0;i<3;i++){let x=W*(.37+i*.075);ctx.fillStyle=["#f4d37c","#ef9c9c","#a9d5a4"][i];rr(x,H*.19,24,38,7);ctx.fillStyle="#7f5b4b";ctx.fillRect(x,H*.185,24,5)}
+ // hanging utensils
+ ctx.strokeStyle="#b58aa1";ctx.lineWidth=4;
+ for(let i=0;i<3;i++){let x=W*(.39+i*.055);ctx.beginPath();ctx.moveTo(x,H*.285);ctx.lineTo(x,H*.385);ctx.stroke();ctx.fillStyle="#d9b7c7";ctx.beginPath();ctx.arc(x,H*.395,10,0,7);ctx.fill()}
+ // sink + faucet
+ ctx.fillStyle="#d9edf4";rr(W*.05,H*.48,W*.22,H*.055,14);
+ ctx.strokeStyle="#8aa4ad";ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(W*.15,H*.48);ctx.quadraticCurveTo(W*.15,H*.43,W*.205,H*.445);ctx.stroke();
+ // stove/oven area at right
+ ctx.fillStyle="#f5e9ee";rr(W*.68,H*.43,W*.24,H*.115,14);
+ ctx.fillStyle="#40454b";for(let i=0;i<2;i++){ctx.beginPath();ctx.ellipse(W*(.735+i*.11),H*.455,25,9,0,0,7);ctx.fill()}
+ ctx.fillStyle="#ead5de";rr(W*.70,H*.60,W*.20,H*.22,16);
+ ctx.fillStyle="#4d5158";rr(W*.72,H*.64,W*.16,H*.115,10);
+ ctx.strokeStyle="#d6b5c4";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(W*.75,H*.62);ctx.lineTo(W*.85,H*.62);ctx.stroke();
+ // counter
  ctx.fillStyle="#fffdf8";ctx.fillRect(0,H*.54,W,H*.055);ctx.fillStyle="#d8a77c";ctx.fillRect(0,H*.595,W,H*.405);
+ ctx.fillStyle="#c18a60";ctx.fillRect(0,H*.61,W,7);
+ // lower cabinet panels
+ ctx.strokeStyle="#aa734f";ctx.lineWidth=2;for(let x=18;x<W;x+=105)ctx.strokeRect(x,H*.78,88,H*.17);
 }
 function bowl(){
  let x=BX(),y=BY();
@@ -149,7 +201,7 @@ function creamBag(x,y){ctx.save();ctx.translate(x,y);ctx.scale(1.15,1.15);ctx.fi
 function hint(){
  if(drag||locked||performance.now()-stageStart<1100)return;
  if(stage===0){pulse(BX()+105,BY()-22,25);arrow(W*.79,H*.31,BX()+120,BY()-55)}
- if(stage===1){arrow(W*.79,H*.27,BX()+120,BY()-130)}
+ if(stage===1){arrow(W*.80,H*.25,BX()+75,BY()-105)}
  if(stage===2){arrow(W*.79,H*.27,BX()+120,BY()-130)}
  if(stage===3){ctx.strokeStyle="#ff79aa";ctx.lineWidth=6;ctx.setLineDash([10,8]);ctx.beginPath();ctx.arc(BX(),BY()-10,80,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
  if(stage===4){arrow(W*.79,H*.27,W*.50,H*.58)}
@@ -181,7 +233,10 @@ function draw(){
  }
  if(stage===1){
   bowl();let x=drag?.kind==="milk"?drag.x:W*.81,y=drag?.kind==="milk"?drag.y:H*.31,r=drag?.rot||0;if(!drag)toolGlow(W*.81,H*.31,90);milk(x,y,r);
-  if(drag?.pouring){ctx.strokeStyle="#f8fdff";ctx.lineWidth=13;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(drag.sx,drag.sy);ctx.lineTo(drag.tx,drag.ty);ctx.stroke()}
+  if(drag?.pouring){
+    ctx.strokeStyle="#f8fdff";ctx.lineWidth=13;ctx.lineCap="round";
+    ctx.beginPath();ctx.moveTo(drag.sx,drag.sy);ctx.lineTo(drag.sx,drag.ty);ctx.stroke()
+  }
  }
  if(stage===2){
   bowl();let x=drag?.kind==="flour"?drag.x:W*.81,y=drag?.kind==="flour"?drag.y:H*.31;if(!drag)toolGlow(W*.81,H*.31,92);flour(x,y);
@@ -219,6 +274,7 @@ function draw(){
   if(!S.decor.honeyDone){syrupBottle(W*.72,H*.40);ctx.strokeStyle="#d99820";ctx.lineWidth=9;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(W*.70,H*.45);ctx.quadraticCurveTo(W*.58,H*.49,W*.51,H*.54);ctx.stroke()}
  }
 
+ updateGuide();
  hint();
  requestAnimationFrame(draw)
 }
@@ -258,14 +314,21 @@ c.onpointermove=e=>{
  }
 
  if(drag?.kind==="milk"){
-  // Clear liquid gesture: hold carton ABOVE bowl and rotate its TOP toward the bowl.
-  let zone=near(q,bx+135,by-185,220);
-  drag.rot=zone?-1.05:0;
+  // Pack and stream are physically linked: the stream begins at the drawn spout
+  // and always falls VERTICALLY from that x-position.
+  const aboveBowl = q.y < by-75;
+  drag.rot = aboveBowl ? -0.88 : 0;
   let cs=Math.cos(drag.rot),sn=Math.sin(drag.rot);
-  drag.sx=q.x+(-13*cs)-(-69*sn);drag.sy=q.y+(-13*sn)+(-69*cs);
-  drag.tx=bx+45;drag.ty=by-12;drag.pouring=zone;
-  let inside=Math.abs(drag.sx-bx)<145 && drag.sy<by-40;
-  if(zone&&inside){S.milk.level=Math.min(100,S.milk.level+.30);meter(S.milk.level);if(S.milk.level>=100)beginTransition("milk",1300)}
+  // local spout point of carton after rotation
+  drag.sx=q.x+(-13*cs)-(-69*sn);
+  drag.sy=q.y+(-13*sn)+(-69*cs);
+  drag.ty=by-12;
+  const landsInBowl = aboveBowl && drag.sx>bx-112 && drag.sx<bx+112 && drag.sy<by-45;
+  drag.pouring=aboveBowl;
+  if(landsInBowl){
+    S.milk.level=Math.min(100,S.milk.level+.28);meter(S.milk.level);
+    if(S.milk.level>=100)beginTransition("milk",1300)
+  }
  }
 
  if(drag?.kind==="flour"){
@@ -297,9 +360,20 @@ c.onpointerup=e=>{
  drag=null;stageStart=performance.now()
 };
 
+
+document.querySelector("#undoBtn").onclick=()=>{
+ if(stage!==7||S.decor.done)return;
+ if(S.decor.items.length){S.decor.items.pop();beep(420,.04);msg("↶")}
+};
+document.querySelector("#finishBtn").onclick=()=>{
+ if(stage!==7||!S.decor.honeyDone||S.decor.done)return;
+ S.decor.done=true;decorControls.style.display="none";meter(100);beep(980,.10);finalCard.style.display="block";
+};
+document.querySelector("#againBtn").onclick=()=>location.reload();
+
 document.querySelector("#snd").onclick=e=>{sound=!sound;e.currentTarget.textContent=sound?"♪":"×";beep(700)};
 document.querySelector("#home").onclick=()=>location.reload();
-setDots();requestAnimationFrame(draw);
+setDots();updateGuide();requestAnimationFrame(draw);
 </script>
 </body>
 </html>
