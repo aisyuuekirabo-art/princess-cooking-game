@@ -242,4 +242,64 @@ c.onpointerdown=e=>{
    types.forEach((t,i)=>{let col=i%4,row=Math.floor(i/4),x=W*(.14+col*.24),y=H*(.22+row*.105);if(near(q,x,y,38))hitType=t});
    if(hitType){S.decor.selected=hitType;beep(650,.04);msg("✨")}
    else if(S.decor.selected&&q.y>H*.43&&q.y<H*.80){let o={type:S.decor.selected,x:q.x,y:q.y,s:1.05};S.decor.items.push(o);drag={kind:"decor",o}}
- }>
+ }
+};
+
+c.onpointermove=e=>{
+ if(!drag||locked||transition)return;let q=pt(e),bx=BX(),by=BY();drag.x=q.x;drag.y=q.y;
+
+ if(drag.kind==="egg"){
+  let tx=bx+105,ty=by-22,bottomY=q.y+52,d=Math.hypot(q.x-tx,bottomY-ty);
+  if(d>74)S.egg.armed=true;
+  if(d<29&&S.egg.armed&&performance.now()-S.egg.lastHit>430){
+   S.egg.armed=false;S.egg.lastHit=performance.now();S.egg.hits++;meter(S.egg.hits*28);beep(210+S.egg.hits*55,.07);
+   if(S.egg.hits>=3){S.egg.opened=true;drag=null;beginTransition("egg",1650)}
+  }
+ }
+
+ if(drag?.kind==="milk"){
+  // Clear liquid gesture: hold carton ABOVE bowl and rotate its TOP toward the bowl.
+  let zone=near(q,bx+135,by-185,220);
+  drag.rot=zone?-1.05:0;
+  let cs=Math.cos(drag.rot),sn=Math.sin(drag.rot);
+  drag.sx=q.x+(-13*cs)-(-69*sn);drag.sy=q.y+(-13*sn)+(-69*cs);
+  drag.tx=bx+45;drag.ty=by-12;drag.pouring=zone;
+  let inside=Math.abs(drag.sx-bx)<145 && drag.sy<by-40;
+  if(zone&&inside){S.milk.level=Math.min(100,S.milk.level+.30);meter(S.milk.level);if(S.milk.level>=100)beginTransition("milk",1300)}
+ }
+
+ if(drag?.kind==="flour"){
+  drag.pouring=near(q,bx+100,by-165,205);
+  if(drag.pouring){S.flour.level=Math.min(100,S.flour.level+.36);meter(S.flour.level);if(S.flour.level>=100)beginTransition("flour",1350)}
+ }
+
+ if(drag?.kind==="whisk"){
+  let dx=q.x-bx,dy=q.y-by,inside=Math.abs(dx)<128&&dy>-78&&dy<52;
+  if(inside){let a=Math.atan2(dy,dx);if(drag.a!==null){let d=Math.abs(a-drag.a);if(d>Math.PI)d=2*Math.PI-d;if(d<1.35)drag.total+=d}drag.a=a;S.mix.level=Math.min(100,drag.total*2.8);meter(S.mix.level);if(S.mix.level>=100)beginTransition("mix",1450)}else drag.a=null
+ }
+
+ if(drag?.kind==="ladle"){
+  if(near(q,W*.42,H*.63,165)){S.pour.level=Math.min(100,S.pour.level+.36);meter(S.pour.level);if(S.pour.level>=100)beginTransition("pour",1350)}
+ }
+
+ if(drag?.kind==="spatula"){
+  let under=Math.abs(q.x-W*.42)<135&&q.y>H*.61&&q.y<H*.73;
+  if(under){drag.inserted=true;S.flip.insert=Math.min(100,S.flip.insert+1.0);meter(Math.min(70,S.flip.insert))}
+  if(drag.inserted&&q.y<H*.52&&S.flip.insert>35){drag=null;beginTransition("flip",1550)}
+ }
+
+ if(drag?.kind==="decor"){drag.o.x=q.x;drag.o.y=q.y}
+};
+
+c.onpointerup=e=>{
+ if(!drag)return;let q=pt(e);
+ if(drag.kind==="decor"){if(!(q.y>H*.43&&q.y<H*.80))S.decor.items.pop()}
+ drag=null;stageStart=performance.now()
+};
+
+document.querySelector("#snd").onclick=e=>{sound=!sound;e.currentTarget.textContent=sound?"♪":"×";beep(700)};
+document.querySelector("#home").onclick=()=>location.reload();
+setDots();requestAnimationFrame(draw);
+</script>
+</body>
+</html>
