@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v50</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v51</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -15,11 +15,11 @@ header button{height:38px;border:0;border-radius:12px;background:#fff;box-shadow
 #dots{text-align:center;font-size:14px;letter-spacing:4px;color:#d8b7c7}
 #game{flex:1;min-height:0;position:relative}
 canvas{width:100%;height:100%;display:block;touch-action:none}
-#meter{position:absolute;left:10%;right:10%;top:10px;height:10px;border-radius:20px;background:#ffffffad;overflow:hidden;box-shadow:0 2px 8px #0001;z-index:4}
+#meter{position:absolute;left:10%;right:10%;top:8px;height:8px;border-radius:20px;background:#ffffffad;overflow:hidden;box-shadow:0 2px 8px #0001;z-index:4}
 #fill{height:100%;width:0;background:linear-gradient(90deg,#ffd34e,#ff70a9);transition:.08s}
-#toast{position:absolute;left:50%;top:36px;transform:translateX(-50%);background:#fff;border-radius:30px;padding:7px 15px;font-weight:900;color:#704b5d;box-shadow:0 4px 14px #0002;opacity:0;transition:.18s;white-space:nowrap;z-index:5}
+#toast{position:absolute;left:50%;top:88px;transform:translateX(-50%);background:#fff;border-radius:30px;padding:7px 15px;font-weight:900;color:#704b5d;box-shadow:0 4px 14px #0002;opacity:0;transition:.18s;white-space:nowrap;z-index:5}
 #toast.on{opacity:1}
-#guide{position:absolute;left:50%;top:31px;transform:translateX(-50%);width:min(88%,620px);padding:7px 12px;border-radius:14px;background:#fffdf4e8;color:#6d5360;font-size:12px;font-weight:800;text-align:center;box-shadow:0 2px 10px #0001;z-index:4;pointer-events:none}
+#guide{position:absolute;left:50%;top:52px;transform:translateX(-50%);width:min(88%,620px);padding:7px 12px;border-radius:14px;background:#fffdf4e8;color:#6d5360;font-size:12px;font-weight:800;text-align:center;box-shadow:0 2px 10px #0001;z-index:4;pointer-events:none}
 #decorControls{display:none;position:absolute;right:12px;bottom:14px;gap:8px;z-index:8}
 #decorControls button{border:0;border-radius:16px;padding:11px 14px;font-weight:900;font-size:14px;box-shadow:0 3px 10px #0002}
 #undoBtn{background:#fff;color:#795a69}
@@ -39,7 +39,7 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 #finalCard button{margin:0;border:0;border-radius:15px;background:#ff78aa;color:#fff;font-weight:900;font-size:11px;line-height:1.15;padding:10px 5px;white-space:normal}
 #photoLabel{display:none;position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:10;background:#fffdf0ee;border-radius:18px;padding:7px 14px;color:#7d596c;font-size:12px;font-weight:900;box-shadow:0 2px 10px #0001;pointer-events:none;white-space:nowrap}
 
-#qualityBadge{position:absolute;left:50%;top:5px;transform:translateX(-50%);z-index:8;
+#qualityBadge{position:absolute;left:50%;top:20px;transform:translateX(-50%);z-index:8;
 font:900 10px/1.2 -apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;letter-spacing:.08em;
 color:#b5748e;background:#fff9fbd9;border:1px solid #f4d6e3;border-radius:999px;padding:5px 12px;
 box-shadow:0 3px 12px #c98aa522;pointer-events:none;white-space:nowrap}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v50</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v51</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -401,6 +401,25 @@ function batterSurfaceOverlay(x,y,scale=1,color="#e3b866"){
  ctx.beginPath();ctx.ellipse(x,y-35*scale,92*scale,16*scale,0,0,Math.PI*2);ctx.stroke();
  ctx.restore();
 }
+
+function coverLadleCupWithBatter(x,y,scale=1,color="#e3b866"){
+  ctx.save();
+  // Batter surface itself
+  ctx.fillStyle=color;
+  ctx.globalAlpha=.98;
+  ctx.beginPath();
+  ctx.ellipse(x,y-35*scale,126*scale,29*scale,0,0,Math.PI*2);
+  ctx.fill();
+
+  // slight swirl highlight
+  ctx.strokeStyle="#fff0bd";
+  ctx.lineWidth=3;
+  ctx.globalAlpha=.52;
+  ctx.beginPath();
+  ctx.ellipse(x,y-35*scale,76*scale,13*scale,0,0,Math.PI*2);
+  ctx.stroke();
+  ctx.restore();
+}
 function stovePan(cx,cy,flame=true){
  // compact cooktop under the pan
  ctx.save();
@@ -494,37 +513,6 @@ function whisk(x,y,inserted=false){
    ctx.quadraticCurveTo(i*13,34,0,bottom);ctx.stroke()
  }
  ctx.restore()
-}
-
-function bowlFrontMask(x,y,sc=1){
-  ctx.save();
-  ctx.translate(x,y);
-  ctx.scale(sc,sc);
-
-  // front wall of the same blue bowl
-  let g=ctx.createLinearGradient(0,0,0,190);
-  g.addColorStop(0,"#dff6ff");
-  g.addColorStop(.38,"#b9e8fb");
-  g.addColorStop(1,"#73c8ec");
-  ctx.fillStyle=g;
-  ctx.beginPath();
-  ctx.moveTo(-155,-20);
-  ctx.bezierCurveTo(-145,85,-95,165,0,175);
-  ctx.bezierCurveTo(95,165,145,85,155,-20);
-  ctx.lineTo(145,-7);
-  ctx.bezierCurveTo(130,80,85,145,0,153);
-  ctx.bezierCurveTo(-85,145,-130,80,-145,-7);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle="#62bfe7";
-  ctx.lineWidth=4;
-  ctx.beginPath();
-  ctx.moveTo(-145,-7);
-  ctx.bezierCurveTo(-130,80,-85,145,0,153);
-  ctx.bezierCurveTo(85,145,130,80,145,-7);
-  ctx.stroke();
-  ctx.restore();
 }
 function ladle(x,y,filled=false){
  ctx.save();
@@ -677,16 +665,9 @@ function drawTransition(){
    bowlAt(bowlX,bowlY,.82);
    let q=ease01(t);
    let lx=W*.79+(bowlX-W*.79)*q;
-   let ly=H*.40+(bowlY-20-H*.40)*q;
+   let ly=H*.40+(bowlY-69-H*.40)*q;
    ladle(lx,ly,q>.44);
-
-   if(q>.42){
-     ctx.save();
-     ctx.fillStyle="#e3b866";
-     ctx.beginPath();ctx.ellipse(bowlX,bowlY-35*.82,126*.82,29*.82,0,0,Math.PI*2);ctx.fill();
-     ctx.restore();
-     bowlFrontMask(bowlX,bowlY,.82);
-   }
+   if(q>.48)coverLadleCupWithBatter(bowlX,bowlY,.82,"#e3b866");
    if(q>.58&&Math.random()<.12)soundScoop()
  }
  if(transition.type==="egg"){
@@ -804,7 +785,7 @@ function drawTransition(){
      // continue from the exact scooped position, then lift out
      const q=ease01(t/.20);
      lx=bowlX;
-     ly=(bowlY-20)+(bowlY-145-(bowlY-20))*q;
+     ly=(bowlY-69)+(bowlY-145-(bowlY-69))*q;
      ladle(lx,ly,true);
    }else if(t<.68){
      // carry it clearly ABOVE the pan
@@ -896,26 +877,15 @@ function draw(){
  }
  if(stage===4){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
-  bowlAt(bowlX,bowlY,.82);stovePan(panX,panY,true);
+  bowlAt(bowlX,bowlY,.82);
+  stovePan(panX,panY,true);
 
   if(S.tapSeq.step>0){
-    // Ladle is inside the bowl: cup is intentionally below the liquid surface.
-    ladle(bowlX,bowlY-20,true);
+    // Cup center sits at the batter surface, not below the bowl front.
+    ladle(bowlX,bowlY-69,true);
 
-    // Batter covers the submerged scoop.
-    ctx.save();
-    ctx.fillStyle="#e3b866";
-    ctx.beginPath();
-    ctx.ellipse(bowlX,bowlY-35*.82,126*.82,29*.82,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle="#fff0bd";ctx.lineWidth=3;ctx.globalAlpha=.55;
-    ctx.beginPath();
-    ctx.ellipse(bowlX,bowlY-35*.82,76,13,0,0,Math.PI*2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Most important fix: bowl front wall sits in FRONT of the submerged ladle.
-    bowlFrontMask(bowlX,bowlY,.82);
+    // Batter redraw hides the lower portion of the cup -> looks submerged.
+    coverLadleCupWithBatter(bowlX,bowlY,.82,"#e3b866");
   }else{
     ladle(W*.79,H*.40,false);
   }
