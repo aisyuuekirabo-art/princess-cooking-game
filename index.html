@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Guided Flow v14</title>
+<title>Princess Cooking Studio - Pancake Princess Complete v21</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -85,10 +85,10 @@ const guideText=[
  "おうちの人へ：卵をつかんで、ボウルのふちの丸へ3回コンコン。",
  "おうちの人へ：牛乳パックを持ってボウルの上へ。注ぎ口から真下に牛乳が落ちます。",
  "おうちの人へ：粉の袋をボウルの上へ持っていき、入れてあげよう。",
- "おうちの人へ：右の泡立て器をつかみ、先をボウルの生地に入れてから、指でぐるぐる混ぜよう。",
- "おうちの人へ：おたまを左のボウルにしっかり入れて生地をすくい、火のついたコンロのフライパンへ運んで流そう。",
+ "おうちの人へ：泡立て器は持ち手の端をつかみ、先をボウルの生地に入れてから、指でぐるぐる混ぜよう。",
+ "おうちの人へ：おたまは持ち手の端をつかみ、左のボウルですくってから、火のついたフライパンへ運んで流そう。",
  "おうちの人へ：焼ける色と気泡の変化を見ながら少し待とう。",
- "おうちの人へ：フライ返しをパンケーキの下へ入れて、上へ持ち上げよう。",
+ "おうちの人へ：フライ返しは持ち手の端をつかみ、斜めに差し込んでから持ち上げ、手首を返すように動かそう。",
  "おうちの人へ：材料を選んでパンケーキをタップ。間違えたら『1こもどす』。終わったら『できあがり』。"
 ];
 function updateGuide(){guide.textContent=guideText[stage]||"";decorControls.style.display=(stage===7&&S.decor.honeyDone&&!S.decor.done)?"flex":"none"}
@@ -269,7 +269,7 @@ function hint(){
  arrow(W*.82,H*.40,BX()+65,BY()-80)
 }
  if(stage===4){arrow(W*.82,H*.37,W*.29,H*.53)}
- if(stage===6){arrow(W*.79,H*.32,W*.48,H*.62)}
+ if(stage===6){arrow(W*.82,H*.37,W*.53,H*.63)}
 }
 function drawTransition(){
  if(!transition)return false;
@@ -356,7 +356,7 @@ function draw(){
   const panX=W*.48,panY=H*.70;
   stovePan(panX,panY,true);pancakeAt(panX,panY-10,.86,1);
   let x=drag?.kind==="spatula"?drag.x:W*.82,y=drag?.kind==="spatula"?drag.y:H*.39;
-  if(!drag)toolGlow(W*.82,H*.39,90);spatula(x,y,drag?.r||0)
+  if(!drag)toolGlow(W*.82,H*.39,90);spatula(x,y,drag?.r??-0.22)
  }
  if(stage===7){
   if(!S.decor.honeyDone){
@@ -389,14 +389,15 @@ function draw(){
   if(!S.decor.honeyDone){
     let p=S.decor.honeyIntro/100;
     let bx=W*(.72-.18*Math.sin(p*Math.PI*2)), by=H*.39;
-    let angle=-.95 + .10*Math.sin(p*Math.PI*3);
+    let angle=-2.18 + .12*Math.sin(p*Math.PI*3);
     syrupBottle(bx,by,angle);
     // thick, slightly wavy syrup that stretches downward from the tipped spout
     let sx=bx-38, sy=by+18, ex=W/2+Math.sin(p*8)*W*.10, ey=H*.555;
     ctx.strokeStyle="#d99820";ctx.lineWidth=10;ctx.lineCap="round";
     ctx.beginPath();ctx.moveTo(sx,sy);
-    ctx.bezierCurveTo(sx-8,sy+45,ex+16,ey-55,ex,ey);ctx.stroke();
-    ctx.fillStyle="#d99820";ctx.beginPath();ctx.arc(ex,ey+7+Math.sin(p*14)*3,7,0,Math.PI*2);ctx.fill()
+    ctx.bezierCurveTo(sx-4,sy+75,ex+28,ey-78,ex,ey);ctx.stroke();
+    ctx.fillStyle="#d99820";
+    ctx.beginPath();ctx.ellipse(ex,ey+10+Math.sin(p*12)*4,7,12,0,0,Math.PI*2);ctx.fill()
   }
  }
 
@@ -411,12 +412,12 @@ function near(q,x,y,r){return Math.hypot(q.x-x,q.y-y)<r}
 c.onpointerdown=e=>{
  if(locked||transition)return;let q=pt(e);c.setPointerCapture(e.pointerId);stageStart=performance.now();
 
- if(stage===0&&near(q,W*.80,H*.35,130))drag={kind:"egg",x:q.x,y:q.y};
- else if(stage===1&&near(q,W*.81,H*.31,135))drag={kind:"milk",x:q.x,y:q.y,rot:0};
- else if(stage===2&&near(q,W*.81,H*.31,140))drag={kind:"flour",x:q.x,y:q.y};
- else if(stage===3&&near(q,W*.82,H*.40,145))drag={kind:"whisk",x:q.x,y:q.y,a:null,total:0};
- else if(stage===4&&near(q,W*.82,H*.38,145))drag={kind:"ladle",x:q.x,y:q.y};
- else if(stage===6&&near(q,W*.82,H*.39,145))drag={kind:"spatula",x:q.x,y:q.y,inserted:false};
+ if(stage===0&&near(q,W*.80,H*.35,130))drag={kind:"egg",x:q.x,y:q.y-34,ox:0,oy:-34};
+ else if(stage===1&&near(q,W*.81,H*.31,135))drag={kind:"milk",x:q.x-20,y:q.y-92,ox:-20,oy:-92,rot:0};
+ else if(stage===2&&near(q,W*.81,H*.31,140))drag={kind:"flour",x:q.x-8,y:q.y-80,ox:-8,oy:-80};
+ else if(stage===3&&near(q,W*.82,H*.40,145))drag={kind:"whisk",x:q.x,y:q.y-118,ox:0,oy:-118,a:null,total:0};
+ else if(stage===4&&near(q,W*.82,H*.38,145))drag={kind:"ladle",x:q.x,y:q.y-112,ox:0,oy:-112};
+ else if(stage===6&&near(q,W*.82,H*.39,145))drag={kind:"spatula",x:q.x,y:q.y-112,ox:0,oy:-112,inserted:false,r:-0.22,lastQY:q.y};
 
  else if(stage===7&&S.decor.honeyDone){
    let types=["strawberry","banana","blueberry","chocolate","cream","butter","kiwi","raspberry","cookie","broccoli","fish","onion"];
@@ -428,7 +429,7 @@ c.onpointerdown=e=>{
 };
 
 c.onpointermove=e=>{
- if(!drag||locked||transition)return;let q=pt(e),bx=BX(),by=BY();drag.x=q.x;drag.y=q.y;
+ if(!drag||locked||transition)return;let q=pt(e),bx=BX(),by=BY();drag.x=q.x+(drag.ox||0);drag.y=q.y+(drag.oy||0);
 
  if(drag.kind==="egg"){
   let tx=bx+105,ty=by-22,bottomY=q.y+52,d=Math.hypot(q.x-tx,bottomY-ty);
@@ -442,12 +443,12 @@ c.onpointermove=e=>{
  if(drag?.kind==="milk"){
   // Pack and stream are physically linked: the stream begins at the drawn spout
   // and always falls VERTICALLY from that x-position.
-  const aboveBowl = q.y < by-75;
+  const aboveBowl = drag.y < by-75;
   drag.rot = aboveBowl ? -0.88 : 0;
   let cs=Math.cos(drag.rot),sn=Math.sin(drag.rot);
   // local spout point of carton after rotation
-  drag.sx=q.x+(-13*cs)-(-69*sn);
-  drag.sy=q.y+(-13*sn)+(-69*cs);
+  drag.sx=drag.x+(-13*cs)-(-69*sn);
+  drag.sy=drag.y+(-13*sn)+(-69*cs);
   drag.ty=by-12;
   const landsInBowl = aboveBowl && drag.sx>bx-112 && drag.sx<bx+112 && drag.sy<by-45;
   drag.pouring=aboveBowl;
@@ -468,7 +469,7 @@ c.onpointermove=e=>{
  }
 
  if(drag?.kind==="whisk"){
-  let dx=q.x-bx,dy=q.y-by,inside=Math.abs(dx)<125&&dy>-150&&dy<15;
+  let dx=drag.x-bx,dy=drag.y-by,inside=Math.abs(dx)<125&&dy>-150&&dy<15;
   if(inside){
     let a=Math.atan2(dy,dx);
     if(drag.a!==null){let d=Math.abs(a-drag.a);if(d>Math.PI)d=2*Math.PI-d;if(d<1.20)drag.total+=d}
@@ -480,8 +481,9 @@ c.onpointermove=e=>{
 
  if(drag?.kind==="ladle"){
   const bowlX=W*.28,bowlY=H*.55,panX=W*.57,panY=H*.75;
-  const bowlHit=near(q,bowlX,bowlY-5,118);
-  const panHit=near(q,panX,panY-45,170);
+  const ladleCup={x:drag.x,y:drag.y+46};
+  const bowlHit=near(ladleCup,bowlX,bowlY-5,118);
+  const panHit=near(ladleCup,panX,panY-45,170);
   if(bowlHit&&!S.pour.hasBatter){
     S.pour.loaded=Math.min(100,S.pour.loaded+2.4);
     meter(Math.min(45,S.pour.loaded*.45));
@@ -497,9 +499,19 @@ c.onpointermove=e=>{
 
  if(drag?.kind==="spatula"){
   const panX=W*.48,panY=H*.70;
-  let under=Math.abs(q.x-panX)<145&&q.y>panY-70&&q.y<panY+35;
-  if(under){drag.inserted=true;S.flip.insert=Math.min(100,S.flip.insert+1.0);meter(Math.min(70,S.flip.insert))}
-  if(drag.inserted&&q.y<panY-150&&S.flip.insert>35){drag=null;beginTransition("flip",1550)}
+  const headX=drag.x, headY=drag.y+48;
+  let under=Math.abs(headX-panX)<150&&headY>panY-70&&headY<panY+42;
+  if(under){
+    drag.inserted=true;
+    drag.r=-0.34;
+    S.flip.insert=Math.min(100,S.flip.insert+1.2);
+    meter(Math.min(70,S.flip.insert))
+  }
+  if(drag.inserted){
+    const lift=Math.max(0,(panY-95)-headY);
+    drag.r=Math.min(1.15,-0.34+lift/150*1.45);
+    if(q.y<panY-165&&S.flip.insert>35){drag=null;beginTransition("flip",1650)}
+  }
  }
 
  if(drag?.kind==="decor"){drag.o.x=q.x;drag.o.y=q.y}
