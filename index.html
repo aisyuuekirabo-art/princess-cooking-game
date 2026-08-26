@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Easy Tap v29</title>
+<title>Princess Cooking Studio - Pancake Princess Ultra Easy Tap v30</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -43,6 +43,9 @@ canvas{width:100%;height:100%;display:block;touch-action:none}
 font:900 10px/1.2 -apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;letter-spacing:.08em;
 color:#b5748e;background:#fff9fbd9;border:1px solid #f4d6e3;border-radius:999px;padding:5px 12px;
 box-shadow:0 3px 12px #c98aa522;pointer-events:none;white-space:nowrap}
+
+#easyBadge{position:absolute;left:50%;top:34px;transform:translateX(-50%);z-index:9;background:#ff7dac;color:white;
+font:900 11px sans-serif;padding:6px 12px;border-radius:999px;box-shadow:0 4px 12px #0002;white-space:nowrap;pointer-events:none}
 </style>
 </head>
 <body>
@@ -51,7 +54,7 @@ box-shadow:0 3px 12px #c98aa522;pointer-events:none;white-space:nowrap}
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="easyBadge">かんたんモード：どこでもタップ</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -160,13 +163,13 @@ function setDots(){dots.textContent=Array.from({length:8},(_,i)=>i===stage?"●"
 const BX=()=>W*.40,BY=()=>H*.61;
 
 const guideText=[
- "おうちの人へ：たまごをタップ！ あとは自動でコンコンして割れます。",
- "おうちの人へ：牛乳をタップ！ ボウルへ自動で注ぎます。",
- "おうちの人へ：粉の袋をタップ！ ボウルへ自動で入ります。",
- "おうちの人へ：泡立て器をタップ！ 自動でぐるぐる混ぜます。",
- "おうちの人へ：おたまをタップ！ 生地をすくってフライパンへ自動で流します。",
- "おうちの人へ：すぐ焼けるよ！ 色が変わるのをちょっとだけ見てみよう。",
- "おうちの人へ：パンケーキをタップ！ フライ返しで自動でひっくり返します。3回楽しめます。",
+ "おうちの人へ：画面を1回タップすると、たまごを自動で割ります。",
+ "おうちの人へ：画面を1回タップすると、牛乳を自動で注ぎます。",
+ "おうちの人へ：画面を1回タップすると、粉を自動で入れます。",
+ "おうちの人へ：画面を1回タップすると、自動でぐるぐる混ぜます。",
+ "おうちの人へ：画面を1回タップすると、生地をすくってフライパンへ入れます。",
+ "おうちの人へ：すぐ焼けるよ！ 少しだけ待ってみよう。",
+ "おうちの人へ：画面をタップするたびに、自動でパンケーキをひっくり返します。3回できます。",
  "おうちの人へ：好きなトッピングを選んで、パンケーキをタップしよう。"
 ];
 function updateGuide(){guide.textContent=guideText[stage]||"";decorControls.style.display=(stage===7&&S.decor.honeyDone&&!S.decor.done)?"flex":"none"}
@@ -398,29 +401,17 @@ function syrupBottle(x,y,angle=.12){ctx.save();ctx.translate(x,y);ctx.rotate(ang
 function creamBag(x,y){ctx.save();ctx.translate(x,y);ctx.scale(1.15,1.15);ctx.fillStyle="#f5d9ea";ctx.beginPath();ctx.moveTo(-30,-50);ctx.lineTo(30,-50);ctx.lineTo(12,36);ctx.lineTo(-12,36);ctx.closePath();ctx.fill();ctx.fillStyle="#b3a5b7";ctx.beginPath();ctx.moveTo(-7,36);ctx.lineTo(7,36);ctx.lineTo(0,55);ctx.closePath();ctx.fill();ctx.restore()}
 
 function hint(){
- if(drag||locked||performance.now()-stageStart<750)return;
- const bx=BX(),by=BY();
- const targets=[
-   [W*.80,H*.35],
-   [W*.81,H*.33],
-   [W*.81,H*.33],
-   [W*.82,H*.40],
-   [W*.82,H*.38],
-   [W*.48,H*.69],
-   [W*.48,H*.69]
- ];
- if(stage<=4){
-   const [x,y]=targets[stage];pulse(x,y,32);
-   ctx.save();ctx.fillStyle="#fffdf9e8";ctx.shadowColor="#0002";ctx.shadowBlur=8;
-   rr(x-38,y-72,76,34,17);ctx.shadowBlur=0;
-   ctx.fillStyle="#9a5b78";ctx.font="900 14px sans-serif";ctx.textAlign="center";
-   ctx.fillText("タップ！",x,y-50);ctx.restore()
- }
- if(stage===6){
-   pulse(W*.48,H*.69,34);
-   ctx.save();ctx.fillStyle="#fffdf9e8";rr(W*.48-38,H*.54,76,34,17);
-   ctx.fillStyle="#9a5b78";ctx.font="900 14px sans-serif";ctx.textAlign="center";
-   ctx.fillText("タップ！",W*.48,H*.565);ctx.restore()
+ if(drag||locked||transition||performance.now()-stageStart<500)return;
+ if([0,1,2,3,4,6].includes(stage)){
+   const x=W*.50,y=H*.25;
+   ctx.save();
+   ctx.globalAlpha=.96;
+   ctx.fillStyle="#fffafdee";ctx.shadowColor="#a85b7a44";ctx.shadowBlur=15;
+   rr(x-88,y-28,176,56,28);ctx.shadowBlur=0;
+   ctx.strokeStyle="#ff6fa8";ctx.lineWidth=4;ctx.beginPath();ctx.roundRect(x-88,y-28,176,56,28);ctx.stroke();
+   ctx.fillStyle="#a35474";ctx.font="900 20px sans-serif";ctx.textAlign="center";
+   ctx.fillText("タップしてね！",x,y+7);
+   ctx.restore()
  }
 }
 function drawTransition(){
@@ -604,14 +595,14 @@ function draw(){
   // Easy mode: short baking time, about 2.2 seconds.
   const panX=W*.48,panY=H*.70;
   stovePan(panX,panY,true);
-  S.cook.level=Math.min(100,S.cook.level+dt*.047);
+  S.cook.level=Math.min(100,S.cook.level+dt*.067);
   meter(S.cook.level);pancakeAt(panX,panY-10,S.cook.level/115,1);
   for(let i=0;i<Math.floor(S.cook.level/12);i++){
     ctx.fillStyle="#fff0ad";ctx.beginPath();
     ctx.arc(panX-62+(i*18)%124,panY-18+(i%2)*10,4,0,Math.PI*2);ctx.fill()
   }
   if(Math.random()<.05)soundSizzle();
-  if(S.cook.level>=100&&!locked)beginTransition("cook",650)
+  if(S.cook.level>=100&&!locked)beginTransition("cook",500)
  }
  if(stage===6){
   const panX=W*.48,panY=H*.70;
@@ -715,27 +706,30 @@ function near(q,x,y,r){return Math.hypot(q.x-x,q.y-y)<r}
 
 c.onpointerdown=e=>{
  if(sound){try{ensureAudio();startBGM()}catch(err){}}
- if(locked||transition)return;
+ if(transition)return;
  let q=pt(e);stageStart=performance.now();
 
- if(EASY_MODE){
-   if(stage===0&&near(q,W*.80,H*.35,150)){
-     S.egg.hits=3;S.egg.opened=true;soundCrack();beginTransition("egg",1550);return
+ // ULTRA EASY MODE:
+ // For all cooking steps, the child can tap ANYWHERE on the game screen.
+ // The whole action then plays automatically as an animation.
+ if(EASY_MODE&&!locked){
+   if(stage===0){
+     locked=false;S.egg.hits=3;S.egg.opened=true;soundCrack();beginTransition("egg",1500);return
    }
-   if(stage===1&&near(q,W*.81,H*.33,155)){
-     S.milk.level=100;soundPour();beginTransition("milk",1500);return
+   if(stage===1){
+     locked=false;S.milk.level=100;soundPour();beginTransition("milk",1450);return
    }
-   if(stage===2&&near(q,W*.81,H*.33,155)){
-     S.flour.level=100;noiseBurst(.08,.018,950);beginTransition("flour",1500);return
+   if(stage===2){
+     locked=false;S.flour.level=100;noiseBurst(.08,.018,950);beginTransition("flour",1450);return
    }
-   if(stage===3&&near(q,W*.82,H*.40,160)){
-     S.mix.level=100;soundMix();beginTransition("mix",1450);return
+   if(stage===3){
+     locked=false;S.mix.level=100;soundMix();beginTransition("mix",1400);return
    }
-   if(stage===4&&near(q,W*.82,H*.38,160)){
-     S.pour.loaded=100;S.pour.hasBatter=true;S.pour.level=100;soundScoop();beginTransition("pour",1650);return
+   if(stage===4){
+     locked=false;S.pour.loaded=100;S.pour.hasBatter=true;S.pour.level=100;soundScoop();beginTransition("pour",1550);return
    }
-   if(stage===6&&near(q,W*.48,H*.69,190)){
-     soundPlop();beginTransition("flip",1150);return
+   if(stage===6){
+     locked=false;soundPlop();beginTransition("flip",1050);return
    }
  }
 
