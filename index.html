@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#fff4f8">
-<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v47</title>
+<title>Princess Cooking Studio - Pancake Princess Ingredient Tap v48</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff4f8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif}
@@ -57,7 +57,7 @@ font:900 11px sans-serif;padding:5px 8px;border-radius:10px;pointer-events:none;
 <div id="game">
 <div id="meter"><div id="fill"></div></div>
 <div id="guide"></div>
-<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v47</div><div id="toast"></div>
+<canvas id="c"></canvas><div id="qualityBadge">✨ PRINCESS KITCHEN ✨</div><div id="buildBadge">v48</div><div id="toast"></div>
 <div id="decorControls"><button id="undoBtn">↶ 1こもどす</button><button id="finishBtn">できあがり ✓</button></div>
 <div id="finalCard"><div class="princessStage"><div class="sparkles" id="sparkles">✦ ✧ ✦</div><div class="princess" id="princessAvatar">👸</div><div class="accessories" id="accessories"></div></div><div class="resultCopy"><div class="big" id="resultTitle">プリンセス・クッキング！</div><div class="small" id="resultText">すてきに もりつけできました ✨</div><div class="small" id="unlockText"></div></div><button id="againBtn">もういちど</button></div><div id="photoLabel">できたよ！おうちの人に見せよう</div>
 </div>
@@ -891,7 +891,10 @@ function draw(){
   const plateCY=finalMode?H*.685:H*.71;
   const plateRY=finalMode?76:100;
   const innerRY=finalMode?64:86;
-  const cakeBase=finalMode?H*.735:H*.64;
+  // Place the stack toward the front/lower side of the plate.
+  // Topping mode used to sit far too high (H*.64).
+  const cakeBase=finalMode?H*.725:H*.705;
+  const cakeTop=cakeBase-2*33;
   ctx.fillStyle="#bce6fa";ctx.beginPath();ctx.ellipse(W/2,plateCY,W*(finalMode?.47:.49),plateRY,0,0,Math.PI*2);ctx.fill();
   ctx.fillStyle="#fff";ctx.beginPath();ctx.ellipse(W/2,plateCY-6,W*(finalMode?.425:.44),innerRY,0,0,Math.PI*2);ctx.fill();
   for(let k=0;k<3;k++){
@@ -915,8 +918,8 @@ function draw(){
   if(S.decor.honey>0){
     let h=Math.min(1,S.decor.honey/100);
     ctx.fillStyle="#d99820";ctx.globalAlpha=.18+.64*h;
-    ctx.beginPath();ctx.ellipse(W/2,H*.55,W*.29,25,0,0,Math.PI*2);ctx.fill();
-    ctx.fillRect(W*.29,H*.56,W*.04,55*h);ctx.fillRect(W*.60,H*.56,W*.035,43*h);ctx.fillRect(W*.48,H*.565,W*.03,35*h);
+    ctx.beginPath();ctx.ellipse(W/2,cakeTop-5,W*.29,25,0,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(W*.29,cakeTop+5,W*.04,55*h);ctx.fillRect(W*.60,cakeTop+5,W*.035,43*h);ctx.fillRect(W*.48,cakeTop+9,W*.03,35*h);
     ctx.globalAlpha=1
   }
 
@@ -928,11 +931,11 @@ function draw(){
     ctx.fillStyle=S.decor.selected===types[i]?"#fff0a8":"#ffffffdf";ctx.beginPath();ctx.arc(x,y,24,0,Math.PI*2);ctx.fill();
     topping(types[i],x,y,.68)
   }
-  S.decor.items.forEach(o=>topping(o.type,o.x,o.y+(S.decor.done?H*.006:0),o.s||.78));
+  S.decor.items.forEach(o=>topping(o.type,o.x,o.y+(S.decor.done?H*.018:0),o.s||.78));
   drawSparkles();
   if(S.decor.done){
     // appetizing finish: toasted edge, butter, glossy syrup and warm highlights
-    const topY=H*.735-2*33;
+    const topY=cakeTop;
     // butter pat
     ctx.save();ctx.translate(W*.47,topY-10);ctx.rotate(-.08);
     ctx.fillStyle="#fff08a";ctx.shadowColor="#c98d2b66";ctx.shadowBlur=8;ctx.fillRect(-23,-9,46,18);
